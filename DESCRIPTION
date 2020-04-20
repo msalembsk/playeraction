@@ -1,0 +1,28 @@
+Package: playeraction
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Authors@R: c(person("Salem", "Boussoukaya",
+	   email = "salemboussoukaya@gmail.com", role = c("aut", "cre")),
+	   person("Tarak", "Kharrat", 
+	          email = "tarak.kharrat@gmail.com",
+		  role = "aut"))
+Description: Provides functions for converting football event stream 
+     data to SPADL and value player actions
+Depends: R (>= 3.5.1)
+Imports: tidyr,
+  	 aroundthegoal (>= 1.0.6),
+  	 xml2,
+  	 dplyr,
+  	 tidyr,
+  	 tryCatchLog,
+  	 futile.logger,
+  	 magrittr,
+  	 zeallot,
+  	 tibble,
+  	 stringr
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Suggests: testthat
+RoxygenNote: 6.1.1

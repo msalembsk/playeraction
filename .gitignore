@@ -4,7 +4,8 @@
 
 # Session Data files
 .RData
-
+.Rbuildignore
+playeraction.Rproj
 # User-specific files
 .Ruserdata
 
