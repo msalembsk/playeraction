@@ -1,28 +1,27 @@
 Package: playeraction
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Compute on the ball action values for soccer players
 Version: 0.1.0
 Authors@R: c(person("Salem", "Boussoukaya",
 	   email = "salemboussoukaya@gmail.com", role = c("aut", "cre")),
 	   person("Tarak", "Kharrat", 
-	          email = "tarak.kharrat@gmail.com",
+	          email = "tarak@realanalytics.co.uk",
 		  role = "aut"))
-Description: Provides functions for converting football event stream 
-     data to SPADL and value player actions
-Depends: R (>= 3.5.1)
-Imports: tidyr,
-  	 aroundthegoal (>= 1.0.6),
-  	 xml2,
-  	 dplyr,
-  	 tidyr,
-  	 tryCatchLog,
+Description: Convert football event stream data to a standardised form and use to compute on the ball action values for soccer using various machine learning (ML) techniques. The package provides tools to extract and clean raw feed (as provided by various commercial data providers), store them efficiently, create features to fit various ML models. 
+Depends: R (>= 3.6.3)
+Imports:
+  	 aroundthegoal (>= 1.2.3),
+     mongoTools (>= 2.1.0),
+     tidyverse (>= 1.3),
+     R6 (>= 2.4.1),
+     data.table (>= 1.12.8),
+     tryCatchLog,
   	 futile.logger,
-  	 magrittr,
-  	 zeallot,
-  	 tibble,
-  	 stringr
+  	 magrittr (>= 1.5),
+  	 zeallot (>= 0.1),
+     reticulate (>= 1.15)
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
