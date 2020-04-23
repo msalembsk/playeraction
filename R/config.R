@@ -24,7 +24,7 @@ NULL
 #' @param collections_target character name of collection to connect to from
 #'     the \code{target_db} family
 #' @param project_name character project-name
-#' @import tryCatchLog futile.logger tidyverse aroundthegoal
+#' @import tryCatchLog futile.logger tidyverse aroundthegoal R6
 #' @importFrom purrr map
 #' @export
 set_db_all <- function(json_config_file_name = "config_global_ra.json",
