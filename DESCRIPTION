@@ -8,7 +8,7 @@ Authors@R: c(person("Salem", "Boussoukaya",
 	          email = "tarak@realanalytics.co.uk",
 		  role = "aut"))
 Description: Convert football event stream data to a standardised form and use to compute on the ball action values for soccer using various machine learning (ML) techniques. The package provides tools to extract and clean raw feed (as provided by various commercial data providers), store them efficiently, create features to fit various ML models. 
-Depends: R (>= 3.6.3)
+Depends: R (>= 3.6.2)
 Imports:
   	 aroundthegoal (>= 1.2.3),
      mongoTools (>= 2.1.0),
