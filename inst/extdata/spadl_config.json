@@ -115,5 +115,7 @@
       "foot",
       "head",
       "other"
-   ]
+   ],
+   "field_length":105,
+   "field_width":68
 }

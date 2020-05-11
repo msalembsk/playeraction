@@ -35,7 +35,7 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
                        database_type = c("localhost", "prod", "prod_backup"),
                        ## useful collections
                        feed_collections = c("events", "fixtures", "players"),
-                       spadl_collections = c("events", "features",
+                       spadl_collections = c("features",
                                              "action_values"),
                        spadl_config = "spadl_config.json",
                        project_name = "playeraction") {

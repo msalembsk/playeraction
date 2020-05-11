@@ -33,23 +33,43 @@
 
 
   .parse_single_event <- function(idx_row) {
+    assist <- NA
+    keypass <- NA
 
     event_ <- events[idx_row, ]
     start_x_ <- event_$x %>% as.numeric()
     start_y_ <- event_$y %>% as.numeric()
     outcome_ <- event_$outcome %>% as.numeric()
 
+
+    type_id_ <- event_$typeId %>% as.numeric()
+
+    min_ <- event_$min %>% as.numeric()
+    sec_ <- event_$sec %>% as.numeric()
+
+    team_id_ <- event_$teamId %>% as.numeric()
+    player_id_ <- event_$playerId %>% as.numeric()
+
     qualifiers_ <- .parse_qualifiers(idx_row)$qualifiers
 
     end_y_ <- .end_y_value(qualifiers_)
     end_x_ <- .end_x_value(qualifiers_)
 
+    c(keypass, assist) %<-% .keypasses_assists(events[idx_row, ])
+
     data.table(
       gameid = gameid,
+      team_id = team_id_,
+      player_id = player_id_,
+      type_id = type_id_,
       start_x = start_x_,
       start_y = start_y_,
       end_x = end_x_,
       end_y = end_y_,
+      min = min_,
+      sec = sec_,
+      keypass = keypass,
+      assist = assist,
       outcome = outcome_
     )
   }
@@ -62,7 +82,16 @@
 }
 
 
+.keypasses_assists <- function(event) {
+  assist <- NA
+  keypass <- NA
+  if (event$typeId == 16)
+    assist <- 1
+  else if (event$typeId %in% c(13:15, 60))
+    keypass <- 1
 
+  c(keypass, assist)
+}
 
 #' @param qualifiers  data.frame qualifiers's event
 .end_x_value <- function(qualifiers) {
@@ -97,6 +126,9 @@
 
   end_y
 }
+
+
+
 
 ## read qualifiers as array or as data.frame
 #' @param qualifiers  array data.frame
