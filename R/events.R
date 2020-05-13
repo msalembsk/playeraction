@@ -11,6 +11,10 @@
   events_query <- paste0('{"gameId" : ', gameid, "}")
   events <- events_con$find(events_query)
 
+  ## check if retrieved events collection is empty
+  if (nrow(events) == 0 | ncol(events) == 0) {
+    return(data.table())
+  }
   ## qualifiers
   qualifiers <- events$qualifiers
 
@@ -31,32 +35,42 @@
   ## get all qualifiers from events
   qualifiers_ <- do.call(rbind, lapply(1:nrows, .parse_qualifiers))
 
-
+  ## parse a single event by index
   .parse_single_event <- function(idx_row) {
     assist <- NA
     keypass <- NA
 
+    ## get event by id
     event_ <- events[idx_row, ]
+
+    ## start position of the event
     start_x_ <- event_$x %>% as.numeric()
     start_y_ <- event_$y %>% as.numeric()
-    outcome_ <- event_$outcome %>% as.numeric()
+
+    ## TRUE or FALSE outcome
+    outcome_ <- event_$outcome %>% as.logical()
 
 
     type_id_ <- event_$typeId %>% as.numeric()
 
+    ## minute & seconds of the event
     min_ <- event_$min %>% as.numeric()
     sec_ <- event_$sec %>% as.numeric()
 
     team_id_ <- event_$teamId %>% as.numeric()
     player_id_ <- event_$playerId %>% as.numeric()
 
+    ## qualifiers as data.frame
     qualifiers_ <- .parse_qualifiers(idx_row)$qualifiers
 
+    ## end position of the event
     end_y_ <- .end_y_value(qualifiers_)
     end_x_ <- .end_x_value(qualifiers_)
 
-    c(keypass, assist) %<-% .keypasses_assists(events[idx_row, ])
+    ## keypass or assist if exists
+    c(keypass, assist) %<-% .keypasses_assists(event_$typeId)
 
+    ## reformat event as data.table
     data.table(
       gameid = gameid,
       team_id = team_id_,
@@ -74,21 +88,23 @@
     )
   }
 
+  ## get all events from a given gameid
   events_ <- do.call(rbind, lapply(1:nrows, .parse_single_event))
 
 
-
+  ## associate each qualifiers to its event
   cbind(events_,  qualifiers = qualifiers_)
 }
 
-
-.keypasses_assists <- function(event) {
-  assist <- NA
-  keypass <- NA
-  if (event$typeId == 16)
-    assist <- 1
-  else if (event$typeId %in% c(13:15, 60))
-    keypass <- 1
+#' get keypasses or assists if exists
+#' @param type_id  integer  event type
+.keypasses_assists <- function(type_id) {
+  assist <- FALSE
+  keypass <- FALSE
+  if (type_id == 16)
+    assist <- TRUE
+  else if (type_id %in% c(13:15, 60))
+    keypass <- TRUE
 
   c(keypass, assist)
 }
@@ -130,8 +146,8 @@
 
 
 
-## read qualifiers as array or as data.frame
-#' @param qualifiers  array data.frame
+#' read qualifiers as array or as data.frame
+#' @param qualifiers  array data.frame data.frame
 .read_qualifiers <- function(qualifiers) {
   if (is.null(qualifiers)) {
     return(data.frame())
