@@ -1,7 +1,6 @@
 #' @param events list events after formating
-#' @param config  list  spadl attributs
 #' @export
-.events_to_spadl <- function(events, config = .settings$spadl_config) {
+.events_to_spadl <- function(events) {
   spadl_cfg <- .load_config()
 
   ## number of events row per game
@@ -49,13 +48,14 @@
     result_type_name <- .get_result_type(event_)
 
     ## add new columns to the event
-    cbind(event_,
+    event_ <- cbind(event_,
           body_part_id = body_part_id_,
           time_in_seconds = time_in_seconds_,
           action_type_name = action_type_name,
           result_type_name = result_type_name
     )
 
+   event_ %>% .owngoal_x_y()
   }
 
   events <- do.call(rbind, lapply(1:nrows, .parse_event))
@@ -150,6 +150,18 @@
     action_name <- "non_action"
 
   action_name
+}
+
+## coordinates owngoal
+.owngoal_x_y <- function(event, spadl_cfg = .load_config()) {
+  ## recalculate x & y if result type is an owngoal
+  if (event$result_type_name == "owngoal")
+  {
+    ## end x & y new values
+    event$end_y <- spadl_cfg$field_width - event$end_y
+    event$end_x <- spadl_cfg$field_length - event$end_x
+  }
+  event
 }
 
 ## results types
