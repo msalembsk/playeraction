@@ -101,9 +101,13 @@
 .keypasses_assists <- function(type_id) {
   assist <- FALSE
   keypass <- FALSE
-  if (type_id == 16)
+
+  ## get keypass & assist type ids from opta config
+  assist_value <- .settings$opta_config$assist
+  keypass_values <- .settings$opta_config$keypass
+  if (type_id == assist_value)
     assist <- TRUE
-  else if (type_id %in% c(13:15, 60))
+  else if (type_id %in% keypass_values)
     keypass <- TRUE
 
   c(keypass, assist)
