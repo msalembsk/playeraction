@@ -1,6 +1,6 @@
 #' @param gameid integer gameId
 #' @param events_con  mongo event connection
-#' @import data.table
+#' @import data.frame
 #' @export
 .extract_events_from_game <- function(gameid,
                                       events_con = .settings$events_con) {
@@ -8,12 +8,13 @@
 
 
   ## get events per game
+  ## TODO : use MongoTools package
   events_query <- paste0('{"gameId" : ', gameid, "}")
   events <- events_con$find(events_query)
 
   ## check if retrieved events collection is empty
   if (nrow(events) == 0 | ncol(events) == 0) {
-    return(data.table())
+    return(data.frame())
   }
   ## qualifiers
   qualifiers <- events$qualifiers
@@ -70,8 +71,8 @@
     ## keypass or assist if exists
     c(keypass, assist) %<-% .keypasses_assists(event_$typeId)
 
-    ## reformat event as data.table
-    data.table(
+    ## reformat event as data.frame
+    data.frame(
       gameid = gameid,
       team_id = team_id_,
       player_id = player_id_,

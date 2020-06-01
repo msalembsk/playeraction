@@ -155,8 +155,7 @@
 ## coordinates owngoal
 .owngoal_x_y <- function(event, spadl_cfg = .load_config()) {
   ## recalculate x & y if result type is an owngoal
-  if (event$result_type_name == "owngoal")
-  {
+  if (event$result_type_name == "owngoal") {
     ## end x & y new values
     event$end_y <- spadl_cfg$field_width - event$end_y
     event$end_x <- spadl_cfg$field_length - event$end_x
