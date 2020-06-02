@@ -185,8 +185,6 @@
   result_name
 }
 
-
-
 ## load spadl config and enumrate types
 .load_config <- function(config = .settings$spadl_config) {
 
