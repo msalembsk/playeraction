@@ -35,6 +35,7 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
                        database_type = c("localhost", "prod", "prod_backup"),
                        ## useful collections
                        feed_collections = c("events", "fixtures", "players"),
+                       feats_collections = c("playerKeyPasses"),
                        spadl_collections = c("features",
                                              "action_values"),
                        spadl_config = "spadl_config.json",
@@ -58,6 +59,8 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
         path = file.path("inst", "extdata"),
         pkg_name = "playeraction"
     )
+
+    ## TODO: add instat_config
 
     ## ========================= mongo connections
     ## get the appropriate database
@@ -86,8 +89,11 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
     ## feed target
     map(feed_collections, .mongo_con, family = "feed")
 
-    ## features
+    ## spadl
     map(spadl_collections, .mongo_con, family = "spadl")
+
+    ## features
+    map(feats_collections, .mongo_con, family = "features")
 
     ## info log file
     set_up_logger(ljson_config = json_config, project_name = project_name)
