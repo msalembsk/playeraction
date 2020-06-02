@@ -10,6 +10,8 @@
 convert_events_to_spadl.opta_events <- function(object,
                                                 spadl_cfg = .settings$spadl_config,
                                                 ...) {
+    ## read events from opta_events class
+    events <- attr(object, "opta_events")
     ## number of events row per game
     nrows <- nrow(events)
     ## FIXME: use dplyr arrange and include period_id in the sort
@@ -186,53 +188,4 @@ convert_events_to_spadl.opta_events <- function(object,
         result_name <- "fail"
 
     result_name
-}
-
-## FIXME: this step should be done at config time and
-## saved in .settings$spadl_config
-.load_config <- function(config = .settings$spadl_config) {
-    ## action type
-    action_types <- data.frame(
-        type_id = seq_along(config$actiontypes),
-        type_name = config$actiontypes
-    )
-
-    ## event types
-    ## FIXME: this is opta specific, should not be here
-    event_types <- data.frame(
-        event_id = seq_along(config$eventtypes),
-        event_name = config$eventtypes
-    )
-
-    ## body parts
-    bodyparts <- data.frame(
-        bodypart_id = seq_along(config$bodyparts),
-        bodypart_name = config$bodyparts
-    )
-
-    ## result type
-    results <- data.frame(
-        result_id = seq_along(config$results),
-        result_name = config$results
-    )
-
-    ## pitch setting
-    field_length <- config$field_length
-    field_width <- config$field_width
-
-    ## dribble config
-    min_dribble_length <- config$min_dribble_length
-    max_dribble_length <- config$max_dribble_length
-    max_dribble_duration <- config$max_dribble_duration
-
-    ## collect output
-    list(action_types = action_types,
-         event_types = event_types,
-         bodyparts = bodyparts,
-         results = results,
-         field_length = field_length,
-         field_width = field_width,
-         min_dribble_length = min_dribble_length,
-         max_dribble_duration = max_dribble_duration,
-         max_dribble_length = max_dribble_length)
 }
