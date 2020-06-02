@@ -1,5 +1,5 @@
-#' @param events list events after formating
-#' @param config  list  spadl attributs
+#' @param events list events after formatting
+#' @param config  list  spadl attributes
 #' @export
 .events_to_spadl <- function(events, config = .settings$spadl_config) {
 
@@ -84,12 +84,12 @@
   max_dribble_duration <- config$max_dribble_duration
 
   list(action_types = action_types,
-             event_types = event_types,
-             bodyparts = bodyparts,
-             results = results,
-             field_length = field_length,
-             field_width = field_width,
-             min_dribble_length = min_dribble_length,
-             max_dribble_duration = max_dribble_duration,
-             max_dribble_length = max_dribble_length)
+       event_types = event_types,
+       bodyparts = bodyparts,
+       results = results,
+       field_length = field_length,
+       field_width = field_width,
+       min_dribble_length = min_dribble_length,
+       max_dribble_duration = max_dribble_duration,
+       max_dribble_length = max_dribble_length)
 }
