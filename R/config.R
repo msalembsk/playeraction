@@ -38,6 +38,7 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
                        spadl_collections = c("features",
                                              "action_values"),
                        spadl_config = "spadl_config.json",
+                       opta_config = "opta_config.json",
                        project_name = "playeraction") {
 
     ## ========================= json config
@@ -48,6 +49,12 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
 
     .settings$spadl_config <- read_internal_data(
         file = spadl_config,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
+
+    .settings$opta_config <- read_internal_data(
+        file = opta_config,
         path = file.path("inst", "extdata"),
         pkg_name = "playeraction"
     )
