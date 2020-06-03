@@ -26,11 +26,11 @@
    ],
    "results":[
       {"result_id":1,"result_name":"fail"},
-      {"result_id":1,"result_name":"success"} ,
-      {"result_id":1,"result_name":"offside"},
-      {"result_id":1,"result_name":"owngoal"},
-      {"result_id":1,"result_name":"yellow_card"},
-      {"result_id":1,"result_name":"red_card"}
+      {"result_id":2,"result_name":"success"} ,
+      {"result_id":3,"result_name":"offside"},
+      {"result_id":4,"result_name":"owngoal"},
+      {"result_id":5,"result_name":"yellow_card"},
+      {"result_id":6,"result_name":"red_card"}
    ],
    "bodyparts":[
       {"bodypart_id":1,"bodypart_name":"foot"},
