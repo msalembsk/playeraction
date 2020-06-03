@@ -7,9 +7,11 @@
 #' @return \code{tibble} representing SPADL info.
 #' @export
 #' @rdname spadl_conversion
-convert_events_to_spadl.opta_events <- function(object,
-                                                spadl_cfg = .settings$spadl_config,
-                                                ...) {
+convert_events_to_spadl.opta_events <- function(
+                                        object,
+                                        spadl_cfg = .settings$spadl_config,
+                                        opta_cfg = .settings$opta_config,
+                                        ...) {
     ## read events from opta_events class
     events <- attr(object, "opta_events")
     ## number of events row per game
@@ -41,18 +43,22 @@ convert_events_to_spadl.opta_events <- function(object,
 
         ## body part index
         body_part_id_ <- .get_body_parts(
-            event_$qualifiers.qualifiers[[1]]
+            spadl_cfg$bodyparts$bodypart_name,
+            event_$qualifiers.qualifiers[[1]],
+            opta_cfg[["Q_head"]],
+            opta_cfg[["Q_other"]]
         )
 
         ## left join for event name
-        event_ <- event_ %>% left_join(spadl_cfg$event_types,
-                                       by = c("type_id" = "event_id"))
+        event_ <- event_ %>% left_join(opta_cfg$type_table,
+                                       by = c("type_id" = "typeId"))
 
         ## action type name
         action_type_name <- .get_action_type(event_)
 
         ## result type name
-        result_type_name <- .get_result_type(event_)
+        result_type_name <- .get_result_type(event_,
+                                             opta_config[["owngoal"]])
 
         ## add new columns to the event
         event_ <- cbind(event_,
@@ -69,14 +75,14 @@ convert_events_to_spadl.opta_events <- function(object,
 }
 
 ## get body part index
-.get_body_parts <- function(qualifiers) {
+.get_body_parts <- function(bodypart_name, qualifiers, q_head, q_other) {
     qualifiers_keys <- names(qualifiers)
-    if ("15" %in% qualifiers_keys)
-        return(2L)
-    else if ("21" %in% qualifiers_keys)
-        return(3L)
+    if (q_head %in% qualifiers_keys)
+        return(which(bodypart_name == "head"))
+    else if (q_other %in% qualifiers_keys)
+        return(which(bodypart_name == "other"))
     else
-        return(1L)
+        return(which(bodypart_name == "foot"))
 }
 
 ## action types
@@ -109,17 +115,17 @@ convert_events_to_spadl.opta_events <- function(object,
     }
     ## action pass
     else if (event_name %in% action_pass) {
-        ## FIXME: hard coding move to opta config
-        if ("5" %in% qualifiers_keys)
+        ## FIXED: hard coding move to opta config
+        if (opta_config[["Q_freekick"]] %in% qualifiers_keys)
             freekick <- TRUE
 
-        if ("2" %in% qualifiers_keys)
+        if (opta_config[["Q_cross"]] %in% qualifiers_keys)
             cross <- TRUE
 
-        if ("6" %in% qualifiers_keys)
+        if (opta_config[["Q_corner"]] %in% qualifiers_keys)
             corner <- TRUE
 
-        if ("107" %in% qualifiers_keys)
+        if (opta_config[["Q_throw_in"]] %in% qualifiers_keys)
             throw_in <- TRUE
 
         if (throw_in)
@@ -138,11 +144,11 @@ convert_events_to_spadl.opta_events <- function(object,
             action_name <- opta_config["pass"][[1]]
     }
     ## action shot
-    ## FIXME: hard coding move to opta config
+    ## FIXED: hard coding move to opta config
     else if (event_name %in% action_shots) {
-        if ("9" %in% qualifiers_keys)
+        if (opta_config[["shot_penalty"]] %in% qualifiers_keys)
             action_name <- opta_config["shot_penalty"][[1]]
-        else if ("26" %in% qualifiers_keys)
+        else if (opta_config[["shot_freekick"]] %in% qualifiers_keys)
             action_name <- opta_config["shot_freekick"][[1]]
         else
             action_name <- opta_config["shot"][[1]]
@@ -171,13 +177,13 @@ convert_events_to_spadl.opta_events <- function(object,
 }
 
 ## results types
-.get_result_type <- function(event) {
+.get_result_type <- function(event, q_owngoal) {
     event_name <- as.character(event$event_name)
     qualifiers_keys <- names(event$qualifiers.qualifiers[[1]])
     if (event_name == "offside pass")
         result_name <- "offside"
     else if (event_name == "goal") {
-        if ("28" %in% qualifiers_keys)
+        if (q_owngoal %in% qualifiers_keys)
             result_name <- "owngoal"
         else
             result_name <- "success"

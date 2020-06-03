@@ -10,5 +10,6 @@ library(magrittr)
 playeraction::set_db_all(database_type = "local", data_provider = "opta")
 
 game_id <- 44108
-events <- .extract_events_from_game(game_id)
-spdal_events <- .events_to_spadl(events)
+events <- playeraction::.opta_events_from_game(game_id)
+spdal_events <- playeraction::convert_events_to_spadl.opta_events(events)
+
