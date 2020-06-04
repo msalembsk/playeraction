@@ -1,5 +1,6 @@
 #' @import tibble mongoTools
 #' @importFrom aroundthegoal to_l1
+#' @export
 .opta_events_from_game <- function(gameid,
                                    events_con = .settings$events_con,
                                    keypass_con =

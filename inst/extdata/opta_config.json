@@ -24,6 +24,7 @@
     "Q_owngoal":"28",
     "Q_head":"15",
     "Q_other":"21",
+    "Q_dribble":"3",
     "action_shots":["miss", "post", "attempt saved", "goal"],
     "action_pass":["pass", "offside pass"],
     "action_touch":["ball touch"],
@@ -48,6 +49,7 @@
     "shot":"shot",
     "shot_freekick":"shot_freekick",
     "bad_touch":"bad_touch",
+    "dribble":"dribble",
     "foul":"foul",
     "type_table": [
         {"typeId":1,"type":"pass"},

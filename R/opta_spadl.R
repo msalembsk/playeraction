@@ -25,6 +25,7 @@ convert_events_to_spadl.opta_events <- function(
   events <- dplyr::arrange(events, events$minute, events$second,
                            events$period_id)
 
+
   .parse_event <- function(idx_row) {
     event_ <- events[idx_row, ]
 
@@ -77,10 +78,36 @@ convert_events_to_spadl.opta_events <- function(
       result_type_name = result_type_name
     )
 
-    event_ %>% .owngoal_x_y()
+   event_ <- event_ %>% .owngoal_x_y() %>%
+     .check_dribble(q_dribble = opta_cfg[["Q_dribble"]])
+
+   if (idx_row != nrows)
+      event_ <- .check_clearance(event_, .parse_event(idx_row + 1))
+
+   event_
   }
 
   do.call(rbind, lapply(1:nrows, .parse_event))
+}
+
+
+.check_dribble <- function(event_, q_dribble,
+                           opta_config = .settings$opta_config) {
+  qualifiers_keys <- names(event_$qualifiers[[1]])
+  if (q_dribble %in% qualifiers_keys) {
+    event_$action_type_name <- opta_config["dribble"][[1]]
+  }
+
+  event_
+}
+
+.check_clearance <- function(event_, next_event_,
+                             opta_config = .settings$opta_config) {
+  if (event_$action_type_name == opta_config[["clearance"]][[1]]) {
+    event_$end_x <- next_event_$start_x
+    event_$end_y <- next_event_$start_y
+  }
+  event_
 }
 
 ## get body part index
