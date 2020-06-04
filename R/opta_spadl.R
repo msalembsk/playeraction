@@ -8,24 +8,28 @@
 #' @export
 #' @rdname spadl_conversion
 convert_events_to_spadl.opta_events <- function(
-                                                object,
+                                                events,
                                                 spadl_cfg =
                                                   .settings$spadl_config,
                                                 opta_cfg =
                                                   .settings$opta_config,
                                                 ...) {
+  ## FIXME : Error from events parsed as object
   ## read events from opta_events class
-  events <- attr(object, "opta_events")
+  ## events <- attr(object, "opta_events")
+
+
   ## number of events row per game
   nrows <- nrow(events)
-  ## FIXME: use dplyr arrange and include period_id in the sort
-  events <- events[with(events, order(events$min, events$sec)), ]
+  ## FIXED: use dplyr arrange and include period_id in the sort
+  events <- dplyr::arrange(events, events$minute, events$second,
+                           events$period_id)
 
   .parse_event <- function(idx_row) {
     event_ <- events[idx_row, ]
 
     ## time in seconds
-    time_in_seconds_ <- 60 * event_$min + event_$sec
+    time_in_seconds_ <- 60 * event_$minute + event_$second
 
     ## start coordinates formatting
     x_pos_coord <- sapply(
@@ -46,7 +50,7 @@ convert_events_to_spadl.opta_events <- function(
     ## body part index
     body_part_id_ <- .get_body_parts(
       spadl_cfg$bodyparts$bodypart_name,
-      event_$qualifiers.qualifiers[[1]],
+      event_$qualifiers[[1]],
       opta_cfg[["Q_head"]],
       opta_cfg[["Q_other"]]
     )
@@ -62,7 +66,7 @@ convert_events_to_spadl.opta_events <- function(
     ## result type name
     result_type_name <- .get_result_type(
       event_,
-      opta_config[["owngoal"]]
+      opta_cfg[["owngoal"]]
     )
 
     ## add new columns to the event
@@ -96,10 +100,10 @@ convert_events_to_spadl.opta_events <- function(
                              opta_config = .settings$opta_config) {
   action_name <- NA
   ## to character event_name comes as a factor
-  event_name <- as.character(event$event_name)
+  event_name <- as.character(event$type)
 
   ## qualifiers
-  qualifiers_keys <- names(event$qualifiers.qualifiers[[1]])
+  qualifiers_keys <- names(event$qualifiers[[1]])
 
   ## load different action types
   action_types <- opta_config$action_types
@@ -139,7 +143,7 @@ convert_events_to_spadl.opta_events <- function(
   else if (event_name %in% action_shots) {
     action_name <- dplyr::case_when(
       opta_config[["shot_penalty"]] %in%
-        qualifiers_key ~ opta_config["shot_penalty"][[1]],
+        qualifiers_keys ~ opta_config["shot_penalty"][[1]],
       opta_config[["shot_freekick"]] %in%
         qualifiers_keys ~ opta_config["shot_freekick"][[1]],
       TRUE ~ opta_config["shot"][[1]]
@@ -171,12 +175,12 @@ convert_events_to_spadl.opta_events <- function(
 
 ## results types
 .get_result_type <- function(event, q_owngoal) {
-  event_name <- as.character(event$event_name)
-  qualifiers_keys <- names(event$qualifiers.qualifiers[[1]])
+  event_name <- as.character(event$type)
+  qualifiers_keys <- names(event$qualifiers[[1]])
   if (event_name == "offside pass") {
     result_name <- "offside"
   } else if (event_name == "goal") {
-    if (q_owngoal %in% qualifiers_keys) {
+    if (!length(qualifiers_keys) && q_owngoal %in% qualifiers_keys) {
       result_name <- "owngoal"
     } else {
       result_name <- "success"

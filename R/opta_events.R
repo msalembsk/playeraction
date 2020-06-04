@@ -106,7 +106,9 @@
 
     ## get all events from a given gameid
     res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event))
-    class(res) <- c("opta_events", res)
+
+    ## FIXME : Error in length(obj)
+    ## class(res) <- c("opta_events", res)
     res
 }
 
