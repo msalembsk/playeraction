@@ -18,9 +18,18 @@ Imports:
   	 futile.logger,
   	 magrittr (>= 1.5),
   	 zeallot (>= 0.1),
-     reticulate (>= 1.15)
+     reticulate (>= 1.15),
+     data.table (>= 1.12.8),
+     pbapply
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
 RoxygenNote: 7.1.0
+Collate: 
+    'config.R'
+    'opta_events.R'
+    'opta_spadl.R'
+    's3_generic.R'
+    'spadl.R'
+    'zzz.R'

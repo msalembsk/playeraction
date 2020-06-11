@@ -25,9 +25,17 @@ Spadl = R6::R6Class("Spadl",
                       #' @param fixture_con mongo-connection :: fixture collection
                       #' connection
                       initialize = function(game_ids, fixture_con) {
-                        ## TODO:
-                        ## 1) metata initialisation here
-                        ## 2) data left as NULL
+                          ## 1) metata initialisation here
+                          keys <- list(gameId = game_ids)
+                          qr <- buildQuery(names(keys), keys)
+                          out <- list(gameId = 1, seasonId = 1, gameDate = 1,
+                                      competitionId = 1, competitionName = 1,
+                                      homeTeamId = 1, awayTeamId = 1,
+                                      homeTeamName = 1, awayTeamName = 1,
+                                      "_id" = 0)
+                          qo <- buildQuery(names(out), out)
+                          self$metadata <- fixture_con$find(qr, qo)
+                          ## 2) data left as NULL
                       },
 
                       #' @description
@@ -72,22 +80,29 @@ Spadl = R6::R6Class("Spadl",
 )
 
 SpadlOpta = R6::R6Class("SpadlOpta",
-                        inherit = "Spadl",
+                        inherit = Spadl,
                         public = list(
-                            initialize = function(game_ids, fixture_con, events_con) {
-                            ## TODO
-                            ## implement a method to fill in the data fields
-                            ## do it in another file
-                            self$data <- .opta_to_spadl(game_ids, events_con)
-
-                            ## call mother class initialize() to finish the job
-                            super$initialize(game_ids, fixture_con)
-                          }
+                            initialize =
+                                function(game_ids,
+                                         fixture_con = .settings$fixtures_con,
+                                         events_con = .settings$events_con,
+                                         keypass_con =
+                                             .settings[["playerKeyPasses_con"]],
+                                         config = .settings$opta_config,
+                                         spadl_cfg = .settings$spadl_config) {
+                                    ## implement a method to fill in the data fields
+                                    ## do it in another file
+                                    self$data <- .opta_to_spadl(game_ids, events_con,
+                                                                keypass_con, spadl_cfg,
+                                                                config)
+                                    ## call mother class initialize() to finish the job
+                                    super$initialize(game_ids, fixture_con)
+                                }
                         )
 )
 
 SpadlInStat = R6::R6Class("SpadlInStat",
-                          inherit = "Spadl",
+                          inherit = Spadl,
                           public = list(
                               initialize = function(game_ids, fixture_con, events_con) {
                               ## implement a method to fill in the data fields

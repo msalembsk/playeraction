@@ -1,3 +1,26 @@
+#' @include opta_events.R
+NULL
+
+#' @importFrom data.table setDT rbindlist
+#' @importFrom pbapply pblapply
+.opta_to_spadl <- function(game_ids,
+                           events_con = .settings$events_con,
+                           keypass_con = .settings[["playerKeyPasses_con"]],
+                           spadl_cfg = .settings$spadl_config,
+                           opta_cfg = .settings$opta_config) {
+    ## work horse
+    .wh <- function(game_id) {
+        .opta_events_from_game(game_id,
+                               events_con = events_con,
+                               keypass_con = keypass_con,
+                               opta_cfg = opta_cfg) %>%
+            convert_events_to_spadl(spadl_cfg = spadl_cfg,
+                                    opta_cfg = opta_cfg)
+    }
+
+    pblapply(game_ids, .wh) %>% rbindlist()
+}
+
 #' convert opta-events to SPADL
 #'
 #' convert opta-events to SPADL
@@ -9,6 +32,7 @@
 #'     global package config
 #' @param ... extra parameters currently not used
 #' @return \code{tibble} representing SPADL info.
+#' @importFrom dplyr filter select
 #' @export
 #' @rdname spadl_conversion
 convert_events_to_spadl.opta_events <- function(events,
@@ -57,7 +81,6 @@ convert_events_to_spadl.opta_events <- function(events,
         event_ <- event_ %>% left_join(opta_cfg$type_table,
                                        by = c("type_id" = "typeId")
                                        )
-
         ## action type name
         action_type_name <- .get_action_type(event_)
 
@@ -67,7 +90,7 @@ convert_events_to_spadl.opta_events <- function(events,
             opta_cfg[["owngoal"]]
         )
 
-    ## add new columns to the event
+        ## add new columns to the event
         event_ <- cbind(event_,
                         body_part_id = body_part_id_,
                         time_in_seconds = time_in_seconds_,
@@ -84,22 +107,25 @@ convert_events_to_spadl.opta_events <- function(events,
         event_
     }
 
-    do.call(rbind, lapply(1:nrows, .parse_event))
+    do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
+    filter(.data$action_type_name != "non_action") %>%
+        select(-.data$qualifiers) %>%
+        setDT()
 }
 
 .check_dribble <- function(event_, q_dribble,
-                           opta_config = .settings$opta_config) {
+                           opta_cfg = .settings$opta_config) {
   qualifiers_keys <- names(event_$qualifiers[[1]])
   if (q_dribble %in% qualifiers_keys) {
-    event_$action_type_name <- opta_config["dribble"][[1]]
+    event_$action_type_name <- opta_cfg["dribble"][[1]]
   }
 
   event_
 }
 
 .check_clearance <- function(event_, next_event_,
-                             opta_config = .settings$opta_config) {
-  if (event_$action_type_name == opta_config[["clearance"]][[1]]) {
+                             opta_cfg = .settings$opta_config) {
+  if (event_$action_type_name == opta_cfg[["clearance"]][[1]]) {
       event_$end_x <- next_event_$start_x
       event_$end_y <- next_event_$start_y
   }
@@ -119,7 +145,7 @@ convert_events_to_spadl.opta_events <- function(events,
 
 ## action types
 .get_action_type <- function(event,
-                             opta_config = .settings$opta_config) {
+                             opta_cfg = .settings$opta_config) {
   action_name <- NA
   ## to character event_name comes as a factor
   event_name <- as.character(event$type)
@@ -128,45 +154,45 @@ convert_events_to_spadl.opta_events <- function(events,
   qualifiers_keys <- names(event$qualifiers[[1]])
 
   ## load different action types
-  action_types <- opta_config$action_types
-  action_shots <- opta_config$action_shots
-  action_pass <- opta_config$action_pass
-  action_foul <- opta_config$action_foul
-  action_touch <- opta_config$action_touch
+  action_types <- opta_cfg$action_types
+  action_shots <- opta_cfg$action_shots
+  action_pass <- opta_cfg$action_pass
+  action_foul <- opta_cfg$action_foul
+  action_touch <- opta_cfg$action_touch
 
   ## standard action
   if (event_name %in% action_types)
-      action_name <- opta_config[event_name][[1]]
+      action_name <- opta_cfg[event_name][[1]]
   else if (event_name %in% action_pass) {
-      freekick <- opta_config[["Q_freekick"]] %in% qualifiers_keys
-      cross <- opta_config[["Q_cross"]] %in% qualifiers_keys
-      corner <- opta_config[["Q_corner"]] %in% qualifiers_keys
-      throw_in <- opta_config[["Q_throw_in"]] %in% qualifiers_keys
+      freekick <- opta_cfg[["Q_freekick"]] %in% qualifiers_keys
+      cross <- opta_cfg[["Q_cross"]] %in% qualifiers_keys
+      corner <- opta_cfg[["Q_corner"]] %in% qualifiers_keys
+      throw_in <- opta_cfg[["Q_throw_in"]] %in% qualifiers_keys
 
       action_name <-
           dplyr::case_when(
-                     throw_in ~ opta_config["throw_in"][[1]],
-                     freekick ~ opta_config["freekick_short"][[1]],
-                     corner & cross ~ opta_config["corner_crossed"][[1]],
-                     freekick & cross ~ opta_config["freekick_crossed"][[1]],
-                     corner ~ opta_config["corner_short"][[1]],
-                     TRUE ~ opta_config["pass"][[1]]
+                     throw_in ~ opta_cfg["throw_in"][[1]],
+                     freekick ~ opta_cfg["freekick_short"][[1]],
+                     corner & cross ~ opta_cfg["corner_crossed"][[1]],
+                     freekick & cross ~ opta_cfg["freekick_crossed"][[1]],
+                     corner ~ opta_cfg["corner_short"][[1]],
+                     TRUE ~ opta_cfg["pass"][[1]]
                  )
   } else if (event_name %in% action_shots) {
       action_name <-
           dplyr::case_when(
-                     opta_config[["shot_penalty"]] %in%
-                     qualifiers_keys ~ opta_config["shot_penalty"][[1]],
-                     opta_config[["shot_freekick"]] %in%
-                     qualifiers_keys ~ opta_config["shot_freekick"][[1]],
-                     TRUE ~ opta_config["shot"][[1]]
+                     opta_cfg[["shot_penalty"]] %in%
+                     qualifiers_keys ~ opta_cfg["shot_penalty"][[1]],
+                     opta_cfg[["shot_freekick"]] %in%
+                     qualifiers_keys ~ opta_cfg["shot_freekick"][[1]],
+                     TRUE ~ opta_cfg["shot"][[1]]
                  )
   } else if (event_name %in% action_touch & !event$outcome)
       ## action touch
-      action_name <- opta_config["bad_touch"][[1]]
+      action_name <- opta_cfg["bad_touch"][[1]]
   else if (event_name %in% action_foul & !event$outcome)
       ## action foul
-      action_name <- opta_config["foul"][[1]]
+      action_name <- opta_cfg["foul"][[1]]
   else
      action_name <- "non_action"
 

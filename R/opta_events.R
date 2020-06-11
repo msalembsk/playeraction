@@ -2,14 +2,14 @@
 #' @importFrom dplyr left_join arrange select
 #' @importFrom aroundthegoal to_l1
 #' @export
-.opta_events_from_game <- function(gameid,
+.opta_events_from_game <- function(game_id,
                                    events_con = .settings$events_con,
                                    keypass_con =
                                        .settings[["playerKeyPasses_con"]],
-                                   opta_config = .settings$opta_config) {
+                                   opta_cfg = .settings$opta_config) {
 
     ## get events per game
-    keys <- list(gameId = gameid)
+    keys <- list(gameId = game_id)
     events_query <- buildQuery(names(keys), keys)
     events <- events_con$find(events_query)
 
@@ -61,19 +61,19 @@
         ## end position of the event
         end_x_ <- .get_end_coordinate(qualifiers = qualifiers_,
                                       q_pass_end =
-                                          opta_config[["Q_pass_end_x"]],
+                                          opta_cfg[["Q_pass_end_x"]],
                                       q_blocked =
-                                          opta_config[["Q_blocked_x"]],
+                                          opta_cfg[["Q_blocked_x"]],
                                       q_goal_mouth =
-                                          opta_config[["Q_goal_mouth_y"]],
+                                          opta_cfg[["Q_goal_mouth_y"]],
                                       use_goal_mouth = FALSE)
         end_y_ <- .get_end_coordinate(qualifiers = qualifiers_,
                                       q_pass_end =
-                                          opta_config[["Q_pass_end_y"]],
+                                          opta_cfg[["Q_pass_end_y"]],
                                       q_blocked =
-                                          opta_config[["Q_blocked_y"]],
+                                          opta_cfg[["Q_blocked_y"]],
                                       q_goal_mouth =
-                                          opta_config[["Q_goal_mouth_y"]],
+                                          opta_cfg[["Q_goal_mouth_y"]],
                                       use_goal_mouth = TRUE)
 
         ## keypass or assist if exists
@@ -87,7 +87,7 @@
         }
 
         ## reformat event as data.frame
-        tibble(game_id = gameid,
+        tibble(game_id = game_id,
                event_id = event_id,
                type_id = type_id_,
                period_id = period_id_,
@@ -106,7 +106,7 @@
                )
     }
 
-    ## get all events from a given gameid
+    ## get all events from a given game_id
     res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event))
 
     ## FIXME : Error in length(obj)
