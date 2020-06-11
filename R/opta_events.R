@@ -1,4 +1,5 @@
 #' @import tibble mongoTools
+#' @importFrom dplyr left_join arrange select
 #' @importFrom aroundthegoal to_l1
 #' @export
 .opta_events_from_game <- function(gameid,
@@ -109,7 +110,7 @@
     res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event))
 
     ## FIXME : Error in length(obj)
-    ## class(res) <- c("opta_events", res)
+    class(res) <- c("opta_events", class(res))
     res
 }
 
@@ -150,7 +151,7 @@
             q_names <- unique(q_names)
 
             out <- data.frame()
-            for (i in 1:nl) {
+            for (i in seq_len(nl)) {
                 qs <- qualifiers[[i]]
                 qs_name <- q_names[which(!q_names %in% names(qs))]
                 if (length(qs_name) > 0) {

@@ -11,6 +11,7 @@ set_db_all(
   data_provider = c("opta", "inStat", "STATS", "whoScored"),
   database_type = c("localhost", "prod", "prod_backup"),
   feed_collections = c("events", "fixtures", "players"),
+  feats_collections = c("playerKeyPasses"),
   spadl_collections = c("features", "action_values"),
   spadl_config = "spadl_config.json",
   opta_config = "opta_config.json",
