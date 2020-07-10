@@ -23,8 +23,6 @@ NULL
 
 #' convert opta-events to SPADL
 #'
-#' convert opta-events to SPADL
-#'
 #' @param object an object from class \code{opta_events}
 #' @param spadl_cfg list giving the SPADL config. Default is to read it from
 #'     global package config
@@ -35,7 +33,7 @@ NULL
 #' @importFrom dplyr filter select
 #' @export
 #' @rdname spadl_conversion
-convert_events_to_spadl.opta_events <- function(events,
+  convert_events_to_spadl.opta_events <- function(events,
                                                 spadl_cfg =
                                                     .settings$spadl_config,
                                                 opta_cfg =
@@ -70,12 +68,15 @@ convert_events_to_spadl.opta_events <- function(events,
         event_$end_y <- y_pos_coord[2]
 
         ## body part index
-        body_part_id_ <- .get_body_parts(
+          body_part_id_ <- .get_body_parts(
             spadl_cfg$bodyparts$bodypart_name,
             event_$qualifiers[[1]],
             opta_cfg[["Q_head"]],
             opta_cfg[["Q_other"]]
         )
+
+        ## body part name
+        body_part_name_ <- spadl_cfg$bodyparts$bodypart_name[body_part_id_]
 
         ## left join for event name
         event_ <- event_ %>% left_join(opta_cfg$type_table,
@@ -90,12 +91,18 @@ convert_events_to_spadl.opta_events <- function(events,
             opta_cfg[["owngoal"]]
         )
 
+        idx_result_id <- which(
+          .settings$spadl_config$results$result_name == result_type_name)
+        result_id_ <- .settings$spadl_config$results$result_id[idx_result_id]
+
         ## add new columns to the event
         event_ <- cbind(event_,
+                        body_part_name = body_part_name_,
                         body_part_id = body_part_id_,
                         time_in_seconds = time_in_seconds_,
-                        action_type_name = action_type_name,
-                        result_type_name = result_type_name
+                        type_name = action_type_name,
+                        result_id = result_id_,
+                        result_name = result_type_name
                         )
 
         event_ <- event_ %>% .owngoal_x_y() %>%
@@ -108,8 +115,8 @@ convert_events_to_spadl.opta_events <- function(events,
     }
 
     do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
-    filter(.data$action_type_name != "non_action") %>%
-        select(-.data$qualifiers) %>%
+    filter(.data$type_name != "non_action") %>%
+        select(-c(.data$qualifiers, .data$event_id, .data$outcome, .data$type)) %>%
         setDT()
 }
 
@@ -117,7 +124,7 @@ convert_events_to_spadl.opta_events <- function(events,
                            opta_cfg = .settings$opta_config) {
   qualifiers_keys <- names(event_$qualifiers[[1]])
   if (q_dribble %in% qualifiers_keys) {
-    event_$action_type_name <- opta_cfg["dribble"][[1]]
+    event_$type_name <- opta_cfg["dribble"][[1]]
   }
 
   event_
@@ -125,7 +132,7 @@ convert_events_to_spadl.opta_events <- function(events,
 
 .check_clearance <- function(event_, next_event_,
                              opta_cfg = .settings$opta_config) {
-  if (event_$action_type_name == opta_cfg[["clearance"]][[1]]) {
+  if (event_$type_name == opta_cfg[["clearance"]][[1]]) {
       event_$end_x <- next_event_$start_x
       event_$end_y <- next_event_$start_y
   }
@@ -202,7 +209,7 @@ convert_events_to_spadl.opta_events <- function(events,
 ## coordinates owngoal
 .owngoal_x_y <- function(event, spadl_cfg = .settings$spadl_config) {
     ## recalculate x & y if result type is an owngoal
-    if (event$result_type_name == "owngoal") {
+    if (event$result_name == "owngoal") {
         ## end x & y new values
         event$end_y <- spadl_cfg$field_width - event$end_y
         event$end_x <- spadl_cfg$field_length - event$end_x
