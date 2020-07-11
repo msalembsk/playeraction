@@ -33,15 +33,14 @@
         second_previous_event <- events[idx_event - 2, ] %>% .fix_start_end_coor(
           home_team_id = home_team_id)
 
-
-
         ## bind 3 events to feature processing
         events <- rbind(current_event, previous_event, second_previous_event)
 
+        type_id_feature <- events %>% .type_id_feature()
+        type_names_feature <- events %>% .type_name_feature()
 
-        featured_events <- events %>% .type_id_feature()
 
-        featured_events
+        cbind(type_id_feature ,type_names_feature)
     }
 
   }
@@ -63,20 +62,47 @@
   event_
 }
 
-## simple feature
+
+## type_id feature
 .type_id_feature <- function(events) {
   attr <- "type_id"
   type_id_values <- events$type_id
   .bind_columns_features(attr = attr, values = type_id_values)
 }
 
+## type_name feature
+.type_name_feature <- function(events, spadl_cfg =
+                                 .settings$spadl_config) {
+  actions_names <- spadl_cfg$actiontypes$action_name
+  out_ <- tibble()
+  ## loop into action_names
+  for (idx in seq_len(length(actions_names))) {
+    ## build the name action
+    attr <- paste0("type_",actions_names[idx])
+    values <- c()
+    for (idx_event in seq_len(nrow(events))) {
+      check_type_name <- FALSE
+      if(events[idx_event,]$type_name == actions_names[idx])
+        check_type_name <- TRUE
+      values <- c(values, check_type_name)
+    }
+    ## columns bind type actions
+    if(nrow(out_) != 0)
+      out_ <- out_ %>% cbind(.bind_columns_features(attr, values))
+    else
+      out_ <- .bind_columns_features(attr, values)
+  }
+  out_
+}
+
 
 ## generic function to bind 2 previous event with the current one
 .bind_columns_features <- function(attr, values, nb_events = 3) {
   out_ <- tibble()
-  for (idx in seq_along(1:nb_events)) {
+  for (idx in seq_len(nb_events)) {
+    ## column name by id
     column_name <- paste0(attr,"_a",as.character(idx))
-    out_[1,column_name] <- values[idx] %>% as.numeric()
+    out_[1,column_name] <- values[idx]
   }
   out_
 }

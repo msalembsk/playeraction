@@ -85,6 +85,7 @@ NULL
         ## action type name
         action_type_name <- .get_action_type(event_)
 
+
         ## result type name
         result_type_name <- .get_result_type(
             event_,
@@ -92,8 +93,11 @@ NULL
         )
 
         idx_result_id <- which(
-          .settings$spadl_config$results$result_name == result_type_name)
-        result_id_ <- .settings$spadl_config$results$result_id[idx_result_id]
+          spadl_cfg$results$result_name == result_type_name)
+        result_id_ <- spadl_cfg$results$result_id[idx_result_id]
+
+        ## remove old type_id
+        event_ <- event_ %>% select(-type_id)
 
         ## add new columns to the event
         event_ <- cbind(event_,
@@ -110,6 +114,12 @@ NULL
 
         if (idx_row != nrows)
             event_ <- .check_clearance(event_, .parse_event(idx_row + 1))
+
+        ## action type id
+        type_id <- which(
+          spadl_cfg$actiontypes$action_name == event_$type_name)
+        ## bind type_id after checking clearance and dribble
+        event_ <- cbind(event_, type_id = type_id)
 
         event_
     }
