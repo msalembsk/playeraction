@@ -38,7 +38,19 @@
   type_name_features <- events %>% .type_name_features(type = "type") %>%
     as.data.frame()
 
-  type_name_features
+  body_part_name_features <- events %>% .type_name_features(type = "body_part") %>%
+    as.data.frame()
+
+  result_name_features <- events %>% .type_name_features(type = "result") %>%
+    as.data.frame()
+
+  tibble(type_id_features,
+         body_part_id_features,
+         result_id_features,
+         start_end_features,
+         type_name_features,
+         body_part_name_features,
+         result_name_features)
 }
 
 
@@ -56,10 +68,10 @@
   end_y_features <- events$end_y %>% .shift_event_values %>%
     .bind_columns_features(attr = "end_y") %>% as.data.frame()
 
-  tibble(start_x_features = start_x_features,
-         start_y_features = start_y_features,
-         end_x_features = end_x_features,
-         end_y_features = end_y_features)
+  tibble(start_x_features,
+         start_y_features,
+         end_x_features,
+         end_y_features)
 }
 
 .shift_event_values <- function(values) {
