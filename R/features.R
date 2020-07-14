@@ -19,12 +19,14 @@
   fixtures_query <- buildQuery(names(keys), keys)
   game_info <- fixtures_con$find(fixtures_query)
 
+  ## home team id
   home_team_id <- game_info$homeTeamId
 
+  ## fix start end coordinates
   events <- events %>% .fix_start_end_coor(home_team_id = home_team_id)
 
 
-
+  ## simple features
   type_id_features <- events$type_id %>% .shift_event_values %>%
     .bind_columns_features(attr = "type_id") %>% as.data.frame()
 
@@ -74,6 +76,15 @@
   movement <- movement_features$movement %>% .shift_event_values %>%
     .bind_columns_features(attr = "movement") %>% as.data.frame()
 
+  ## team features
+  team_features <- events %>%.team_features()
+
+  ## delta time features
+  delta_times <-  events %>% .delta_time_features()
+
+  ## delta space features
+  delta_space <- events %>% .space_delta()
+
   tibble(type_id_features,
          body_part_id_features,
          result_id_features,
@@ -85,9 +96,12 @@
          start_angle_to_goal,
          end_dist_to_goal,
          end_angle_to_goal,
+         team_features,
          dx,
          dy,
-         movement)
+         movement,
+         delta_times,
+         delta_space)
 }
 
 
@@ -217,6 +231,65 @@
   list(dx = distance_x,
        dy = distance_y,
        movement = movement)
+}
+
+.team_features <- function(events) {
+  teams <- events$team_id %>% .shift_event_values()
+
+  ## check if the same team still playing
+  team_1 <- teams$current_values == teams$previous_values
+  team_2 <- teams$current_values == teams$second_previous_values
+
+
+  tibble(team_1 = team_1, team_2 = team_2)
+}
+
+.delta_time_features <- function(events) {
+  time_in_seconds <- events$minute * 60 + events$second
+
+  times <- time_in_seconds %>% .shift_event_values()
+  ## check if the same team still playing
+  time_delta_1 <- times$current_values -
+    times$previous_values
+  time_delta_2 <- times$current_values -
+    times$second_previous_values
+
+
+  tibble(time_delta_1 = time_delta_1, time_delta_2 = time_delta_2)
+}
+
+
+.space_delta <- function(events) {
+
+  start_x <-  events$start_x %>% .shift_event_values()
+  start_y <-  events$start_y %>% .shift_event_values()
+
+  end_x <-  events$end_x %>% .shift_event_values()
+  end_y <-  events$end_y %>% .shift_event_values()
+
+  ## previous events distance
+  previous_dx <- end_x$previous_values - start_x$current_values
+  previous_dy <- end_y$previous_values - start_y$current_values
+
+  dx_a01 <- previous_dx
+  dy_a01 <- previous_dy
+
+  mov_a01 <- sqrt(dx_a01^2 + dy_a01^2)
+
+  ## second previous events distance
+  s_previous_dx <- end_x$second_previous_values - start_x$current_values
+  s_previous_dy <- end_y$second_previous_values - start_y$current_values
+
+  dx_a02 <- s_previous_dx
+  dy_a02 <- s_previous_dy
+  mov_a02 <- sqrt(dx_a02^2 + dy_a02^2)
+
+  tibble(dx_a01 = dx_a01,
+         dy_a01 = dy_a01,
+         mov_a01 = mov_a01,
+         dx_a02 = dx_a02,
+         dy_a02 = dy_a02,
+         mov_a02 = mov_a02)
 }
 
 ## generic features function to bind 2 previous event with the current one
