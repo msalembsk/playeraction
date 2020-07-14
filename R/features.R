@@ -45,8 +45,9 @@
   result_name_features <- events %>% .type_name_features(type = "result") %>%
     as.data.frame()
 
-  start_polar <- events %>%  .start_polar()
-  end_polar <- events %>% .end_polar()
+  ## start end polar call
+  start_polar <- events %>%  .start_polar_features()
+  end_polar <- events %>% .end_polar_features()
 
   start_dist_to_goal <- start_polar$start_dist_to_goal %>% .shift_event_values %>%
     .bind_columns_features(attr = "start_dist_to_goal") %>% as.data.frame()
@@ -60,6 +61,19 @@
   end_angle_to_goal <- end_polar$end_angle_to_goal %>% .shift_event_values %>%
     .bind_columns_features(attr = "end_angle_to_goal") %>% as.data.frame()
 
+
+  ## movement position call
+  movement_features <-  events %>% .movement_features()
+
+  dx <- movement_features$dx %>% .shift_event_values %>%
+    .bind_columns_features(attr = "dx") %>% as.data.frame()
+
+  dy <- movement_features$dy %>% .shift_event_values %>%
+    .bind_columns_features(attr = "dy") %>% as.data.frame()
+
+  movement <- movement_features$movement %>% .shift_event_values %>%
+    .bind_columns_features(attr = "movement") %>% as.data.frame()
+
   tibble(type_id_features,
          body_part_id_features,
          result_id_features,
@@ -70,7 +84,10 @@
          start_dist_to_goal,
          start_angle_to_goal,
          end_dist_to_goal,
-         end_angle_to_goal)
+         end_angle_to_goal,
+         dx,
+         dy,
+         movement)
 }
 
 
@@ -150,7 +167,7 @@
 }
 
 ## start polar position
-.start_polar <- function(events, spadl_cfg = .settings$spadl_config) {
+.start_polar_features <- function(events, spadl_cfg = .settings$spadl_config) {
   goal_x <- spadl_cfg$goal_x
   goal_y <- spadl_cfg$goal_y
 
@@ -170,13 +187,13 @@
 }
 
 ## end polar position
-.end_polar <- function(events, spadl_cfg = .settings$spadl_config) {
+.end_polar_features <- function(events, spadl_cfg = .settings$spadl_config) {
   goal_x <- spadl_cfg$goal_x
   goal_y <- spadl_cfg$goal_y
 
   ## x y distance
-  distance_x <- sapply(events$end_x , function(x) abs(goal_x - x))
-  distance_y <- sapply(events$end_y , function(x) abs(goal_y - x))
+  distance_x <- sapply(events$end_x, function(x) abs(goal_x - x))
+  distance_y <- sapply(events$end_y, function(x) abs(goal_y - x))
 
 
   ## end euclidian distance
@@ -187,6 +204,19 @@
 
   list(end_dist_to_goal = end_dist_to_goal,
        end_angle_to_goal = end_angle_to_goal)
+}
+
+## movement features
+.movement_features <- function(events) {
+  ## distance x y
+  distance_x <- events$end_x - events$start_x
+  distance_y <- events$end_y - events$start_y
+  ## end euclidian distance
+  movement <- sqrt(distance_x^2 + distance_y^2)
+
+  list(dx = distance_x,
+       dy = distance_y,
+       movement = movement)
 }
 
 ## generic features function to bind 2 previous event with the current one
