@@ -39,6 +39,8 @@
    ],
    "field_length":105,
    "field_width":68,
+   "goal_x": 105,
+   "goal_y": 34,
    "min_dribble_length":3,
    "max_dribble_length":60,
    "max_dribble_duration":10

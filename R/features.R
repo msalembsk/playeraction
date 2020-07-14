@@ -5,7 +5,7 @@
 #' @importFrom data.table
 #' @return \code{tibble} representing features details.
 #' @export
-.spadl_to_features_1 <- function(events, fixtures_con =
+.spadl_to_features <- function(events, fixtures_con =
                                    .settings$fixtures_con) {
 
   ## if spadl_events empty
@@ -22,6 +22,7 @@
   home_team_id <- game_info$homeTeamId
 
   events <- events %>% .fix_start_end_coor(home_team_id = home_team_id)
+
 
 
   type_id_features <- events$type_id %>% .shift_event_values %>%
@@ -44,13 +45,32 @@
   result_name_features <- events %>% .type_name_features(type = "result") %>%
     as.data.frame()
 
+  start_polar <- events %>%  .start_polar()
+  end_polar <- events %>% .end_polar()
+
+  start_dist_to_goal <- start_polar$start_dist_to_goal %>% .shift_event_values %>%
+    .bind_columns_features(attr = "start_dist_to_goal") %>% as.data.frame()
+
+  start_angle_to_goal <- start_polar$start_angle_to_goal %>% .shift_event_values %>%
+    .bind_columns_features(attr = "start_angle_to_goal") %>% as.data.frame()
+
+  end_dist_to_goal <- end_polar$end_dist_to_goal %>% .shift_event_values %>%
+    .bind_columns_features(attr = "end_dist_to_goal") %>% as.data.frame()
+
+  end_angle_to_goal <- end_polar$end_angle_to_goal %>% .shift_event_values %>%
+    .bind_columns_features(attr = "end_angle_to_goal") %>% as.data.frame()
+
   tibble(type_id_features,
          body_part_id_features,
          result_id_features,
          start_end_features,
          type_name_features,
          body_part_name_features,
-         result_name_features)
+         result_name_features,
+         start_dist_to_goal,
+         start_angle_to_goal,
+         end_dist_to_goal,
+         end_angle_to_goal)
 }
 
 
@@ -104,6 +124,8 @@
   events
 }
 
+
+## type name features (type action , result , body part)
 .type_name_features <- function(events, type = c("type", "result", "body_part"),
                                 spadl_cfg = .settings$spadl_config) {
   if (type == "type")
@@ -124,8 +146,47 @@
     .bind_columns_features(col_name, values)
   }
 
-  out_ <- lapply(type_names, .fetch_types)
-  out_
+  lapply(type_names, .fetch_types)
+}
+
+## start polar position
+.start_polar <- function(events, spadl_cfg = .settings$spadl_config) {
+  goal_x <- spadl_cfg$goal_x
+  goal_y <- spadl_cfg$goal_y
+
+  ## x y distance
+  distance_x <- sapply(events$start_x, function(x) abs(goal_x - x))
+  distance_y <- sapply(events$start_y, function(x) abs(goal_y - x))
+
+
+  ## start euclidian distance
+  start_dist_to_goal  <- sqrt(distance_x^2 + distance_y^2)
+  ## start angle to goal
+  start_angle_to_goal <- atan(distance_y / distance_x)
+
+
+  list(start_dist_to_goal = start_dist_to_goal,
+       start_angle_to_goal = start_angle_to_goal)
+}
+
+## end polar position
+.end_polar <- function(events, spadl_cfg = .settings$spadl_config) {
+  goal_x <- spadl_cfg$goal_x
+  goal_y <- spadl_cfg$goal_y
+
+  ## x y distance
+  distance_x <- sapply(events$end_x , function(x) abs(goal_x - x))
+  distance_y <- sapply(events$end_y , function(x) abs(goal_y - x))
+
+
+  ## end euclidian distance
+  end_dist_to_goal  <- sqrt(distance_x^2 + distance_y^2)
+  ## end angle to goal
+  end_angle_to_goal <- atan(distance_y / distance_x)
+
+
+  list(end_dist_to_goal = end_dist_to_goal,
+       end_angle_to_goal = end_angle_to_goal)
 }
 
 ## generic features function to bind 2 previous event with the current one
