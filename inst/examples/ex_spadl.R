@@ -15,3 +15,6 @@ spadl_events <- playeraction::convert_events_to_spadl.opta_events(events)
 
 featured_events <- playeraction::.spadl_to_features(spadl_events)
 
+labels_events <- playeraction::.spadl_to_labels(spadl_events)
+
+
