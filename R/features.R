@@ -85,7 +85,7 @@
   ## delta space features
   delta_space <- events %>% .space_delta()
 
-
+  ## goal score teams features
   goal_score <- events %>% .goal_score_features()
 
   tibble(type_id_features,
@@ -104,7 +104,8 @@
          dy,
          movement,
          delta_times,
-         delta_space)
+         delta_space,
+         goal_score)
 }
 
 
@@ -297,17 +298,27 @@
 
 .goal_score_features <- function(events) {
 
-  teamA <- events[1,"team_id"]
-  goals <- grepl('shot', events$type_name) & events$result_name == "success"
-  owngoals <- grepl('shot', events$type_name) & events$result_name == "owngoal"
-  teamisA <- events$team_id[events$team_id == teamA]
-  teamisB <- !teamisA
-  goalsteamA <- (goals & teamisA) | (owngoals & teamisB)
-  goalsteamB <- (goals & teamisB) | (owngoals & teamisA)
-  goalscoreteamA <- cumsum(goalsteamA) - goalsteamA
-  goalscoreteamB <- cumsum(goalsteamB) - goalsteamB
+  team_a <- events[1]$team_id
+  goals <- grepl("shot", events$type_name) & events$result_name == "success"
+  owngoals <- grepl("shot", events$type_name) & events$result_name == "owngoal"
+  team_is_a <- events$team_id == team_a
+  team_is_b <- !team_is_a
+  goals_team_a <- (goals & team_is_a) | (owngoals & team_is_b)
+  goals_team_b <- (goals & team_is_b) | (owngoals & team_is_a)
+  goalscore_team_a <- cumsum(goals_team_a) - goals_team_a
+  goalscore_team_b <- cumsum(goals_team_b) - goals_team_b
 
-  goalscoreteamB
+  goalscore_team <-  goalscore_team_a * team_is_a +
+    goalscore_team_b * team_is_b
+
+  goalscore_opponent <- goalscore_team_b * team_is_a +
+    goalscore_team_a * team_is_b
+
+  goalscore_diff <- goalscore_team - goalscore_opponent
+
+  tibble(goalscore_team = goalscore_team,
+         goalscore_opponent = goalscore_opponent,
+         goalscore_diff = goalscore_diff)
 }
 
 ## generic features function to bind 2 previous event with the current one
