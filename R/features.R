@@ -85,6 +85,9 @@
   ## delta space features
   delta_space <- events %>% .space_delta()
 
+
+  goal_score <- events %>% .goal_score_features()
+
   tibble(type_id_features,
          body_part_id_features,
          result_id_features,
@@ -290,6 +293,21 @@
          dx_a02 = dx_a02,
          dy_a02 = dy_a02,
          mov_a02 = mov_a02)
+}
+
+.goal_score_features <- function(events) {
+
+  teamA <- events[1,"team_id"]
+  goals <- grepl('shot', events$type_name) & events$result_name == "success"
+  owngoals <- grepl('shot', events$type_name) & events$result_name == "owngoal"
+  teamisA <- events$team_id[events$team_id == teamA]
+  teamisB <- !teamisA
+  goalsteamA <- (goals & teamisA) | (owngoals & teamisB)
+  goalsteamB <- (goals & teamisB) | (owngoals & teamisA)
+  goalscoreteamA <- cumsum(goalsteamA) - goalsteamA
+  goalscoreteamB <- cumsum(goalsteamB) - goalsteamB
+
+  goalscoreteamB
 }
 
 ## generic features function to bind 2 previous event with the current one

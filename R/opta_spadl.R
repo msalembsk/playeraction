@@ -45,6 +45,11 @@ NULL
     events <- dplyr::arrange(events, events$minute, events$second,
                              events$period_id)
 
+    ## left join for event name
+    events <- events %>% left_join(opta_cfg$type_table,
+                                   by = c("type_id" = "typeId")
+    )
+    browser()
     .parse_event <- function(idx_row) {
         event_ <- events[idx_row, ]
 
@@ -78,10 +83,7 @@ NULL
         ## body part name
         body_part_name_ <- spadl_cfg$bodyparts$bodypart_name[body_part_id_]
 
-        ## left join for event name
-        event_ <- event_ %>% left_join(opta_cfg$type_table,
-                                       by = c("type_id" = "typeId")
-                                       )
+
         ## action type name
         action_type_name <- .get_action_type(event_)
 
@@ -233,12 +235,18 @@ NULL
     qualifiers_keys <- names(event$qualifiers[[1]])
     if (event_name == "offside pass")
         result_name <- "offside"
+    else if (event_name == "foul")
+      result_name <- "fail"
+    else if (event_name %in% c("attempt saved", "miss", "post"))
+      result_name <- "fail"
     else if (event_name == "goal") {
         if (!length(qualifiers_keys) && q_owngoal %in% qualifiers_keys)
             result_name <- "owngoal"
         else
             result_name <- "success"
-    } else if (event$outcome)
+    } else if (event_name == "ball touch")
+      result_name <- "fail"
+    else if (event$outcome)
         result_name <- "success"
     else
         result_name <- "fail"
