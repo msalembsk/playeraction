@@ -41,27 +41,31 @@
   type_name_features <- events %>% .type_name_features(type = "type") %>%
     as.data.frame()
 
-  body_part_name_features <- events %>% .type_name_features(type = "body_part") %>%
-    as.data.frame()
+  body_part_name_features <- events %>% .type_name_features(
+    type = "body_part") %>% as.data.frame()
 
-  result_name_features <- events %>% .type_name_features(type = "result") %>%
-    as.data.frame()
+  result_name_features <- events %>% .type_name_features(
+    type = "result") %>% as.data.frame()
 
   ## start end polar call
   start_polar <- events %>%  .start_polar_features()
   end_polar <- events %>% .end_polar_features()
 
-  start_dist_to_goal <- start_polar$start_dist_to_goal %>% .shift_event_values %>%
-    .bind_columns_features(attr = "start_dist_to_goal") %>% as.data.frame()
+  start_dist_to_goal <- start_polar$start_dist_to_goal %>%
+    .shift_event_values %>% .bind_columns_features(
+      attr = "start_dist_to_goal") %>% as.data.frame()
 
-  start_angle_to_goal <- start_polar$start_angle_to_goal %>% .shift_event_values %>%
-    .bind_columns_features(attr = "start_angle_to_goal") %>% as.data.frame()
+  start_angle_to_goal <- start_polar$start_angle_to_goal %>%
+    .shift_event_values %>% .bind_columns_features(
+      attr = "start_angle_to_goal") %>% as.data.frame()
 
-  end_dist_to_goal <- end_polar$end_dist_to_goal %>% .shift_event_values %>%
-    .bind_columns_features(attr = "end_dist_to_goal") %>% as.data.frame()
+  end_dist_to_goal <- end_polar$end_dist_to_goal %>%
+    .shift_event_values %>% .bind_columns_features(
+      attr = "end_dist_to_goal") %>% as.data.frame()
 
-  end_angle_to_goal <- end_polar$end_angle_to_goal %>% .shift_event_values %>%
-    .bind_columns_features(attr = "end_angle_to_goal") %>% as.data.frame()
+  end_angle_to_goal <- end_polar$end_angle_to_goal %>%
+    .shift_event_values %>% .bind_columns_features(
+      attr = "end_angle_to_goal") %>% as.data.frame()
 
 
   ## movement position call
@@ -77,7 +81,7 @@
     .bind_columns_features(attr = "movement") %>% as.data.frame()
 
   ## team features
-  team_features <- events %>%.team_features()
+  team_features <- events %>% .team_features()
 
   ## delta time features
   delta_times <-  events %>% .delta_time_features()
@@ -88,29 +92,34 @@
   ## goal score teams features
   goal_score <- events %>% .goal_score_features()
 
-  tibble(type_id_features,
-         body_part_id_features,
-         result_id_features,
-         start_end_features,
-         type_name_features,
-         body_part_name_features,
-         result_name_features,
-         start_dist_to_goal,
-         start_angle_to_goal,
-         end_dist_to_goal,
-         end_angle_to_goal,
-         team_features,
-         dx,
-         dy,
-         movement,
-         delta_times,
-         delta_space,
-         goal_score)
+  ## time features
+  time_feature <- events %>% .time_features()
+
+  period_id <- time_feature$period_id %>% .shift_event_values %>%
+    .bind_columns_features(attr = "period_id") %>% as.data.frame()
+
+  time_seconds <- time_feature$time_seconds %>% .shift_event_values %>%
+    .bind_columns_features(attr = "time_seconds") %>% as.data.frame()
+
+  time_seconds_overall <- time_feature$time_seconds_overall %>%
+    .shift_event_values %>% .bind_columns_features(
+      attr = "time_seconds_overall") %>% as.data.frame()
+
+  tibble(type_id_features, body_part_id_features,
+         result_id_features, start_end_features,
+         type_name_features, body_part_name_features,
+         result_name_features, start_dist_to_goal,
+         start_angle_to_goal, end_dist_to_goal,
+         end_angle_to_goal, team_features,
+         dx, dy,
+         movement, delta_times,
+         delta_space, goal_score,
+         period_id, time_seconds,
+         time_seconds_overall)
 }
 
 
-.start_end_x_y <- function(events)
-{
+.start_end_x_y <- function(events) {
   start_x_features <- events$start_x %>% .shift_event_values %>%
     .bind_columns_features(attr = "start_x") %>% as.data.frame()
 
@@ -319,6 +328,18 @@
   tibble(goalscore_team = goalscore_team,
          goalscore_opponent = goalscore_opponent,
          goalscore_diff = goalscore_diff)
+}
+
+## time overall features
+.time_features <- function(events) {
+  period_id <- events$period_id
+  time_seconds <- events$minute * 60 + events$second
+  time_seconds_overall <- (period_id - 1) * 45 * 60 +
+    time_seconds
+
+  list(period_id = period_id,
+         time_seconds = time_seconds,
+       time_seconds_overall = time_seconds_overall)
 }
 
 ## generic features function to bind 2 previous event with the current one
