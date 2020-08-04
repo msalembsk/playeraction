@@ -34,12 +34,13 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
                                          "STATS", "whoScored"),
                        database_type = c("localhost", "prod", "prod_backup"),
                        ## useful collections
-                       feed_collections = c("events", "fixtures", "players"),
+                       feed_collections = c("events", "fixtures", "players", "GameEvents"),
                        feats_collections = c("playerKeyPasses"),
                        spadl_collections = c("features",
                                              "action_values"),
                        spadl_config = "spadl_config.json",
                        opta_config = "opta_config.json",
+                       instat_config = "instat_config.json",
                        project_name = "playeraction") {
 
     ## ========================= json config
@@ -60,7 +61,11 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
         pkg_name = "playeraction"
     )
 
-    ## TODO: add instat_config
+    .settings$instat_config <- read_internal_data(
+        file = instat_config,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
 
     ## ========================= mongo connections
     ## get the appropriate database
