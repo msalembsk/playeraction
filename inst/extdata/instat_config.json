@@ -20,6 +20,7 @@
   "action_discipline" : ["Foul", "Offside", "Yellow card", "Red card" ],
   "action_clearance" : ["Clearance"],
   "action_goal" : ["Goal"] ,
+  "action_owngoal" : ["Owngoal"],
   "action_shot" : ["Shot blocked", "Wide shot", "Shot into the bar/post","Shot on target"],
   "action_interception" : ["Pass interceptions", "Shots blocked", "Cross interception"],
   "action_challenges" : ["Air challenge","Dribble","Challenge","Tackle" ],
@@ -28,6 +29,12 @@
   "throw_in" : ["Throw-in"],
   "freekick" :["Direct free kick","Indirect free kick"],
   "corner" : ["Corner"],
+  "shot_freekick" : ["Direct free kick"],
+  "foul": ["Foul"],
+  "take_on": ["Air challenge", "Challenge"],
+  "dribble": ["Dribble"],
+  "tackle": ["Tackle"],
+  "cross": ["Cross","Cross blocked"],
   "bodypart_types" : [
   {
     "bodypart_id": 2 ,
