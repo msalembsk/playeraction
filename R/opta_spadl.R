@@ -127,7 +127,7 @@ convert_events_to_spadl.opta_events <- function(events,
     do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
         .add_dribbles(spadl_cfg = spadl_cfg) %>%
     filter(.data$type_name != "non_action") %>%
-        select(-c(.data$qualifiers, .data$event_id, .data$outcome, .data$type))
+        select(-c(.data$qualifiers, .data$outcome, .data$type))
 }
 
 .add_dribbles <- function(events, spadl_cfg = .settings$spadl_config) {
