@@ -33,7 +33,5 @@ global package config}
 \code{tibble} representing SPADL info.
 }
 \description{
-convert opta-events to SPADL
-
 Convert formatted events to SPADL formatted
 }

@@ -28,9 +28,9 @@ Suggests: testthat
 RoxygenNote: 7.1.0
 Collate: 
     'config.R'
-    'opta_events.R'
     'features.R'
     'labels.R'
+    'opta_events.R'
     'opta_spadl.R'
     's3_generic.R'
     'spadl.R'

@@ -1,7 +1,7 @@
 #' @include opta_events.R
 NULL
 
-#' @importFrom data.table setDT rbindlist
+#' @importFrom data.table setDT rbindlist data.table
 #' @importFrom pbapply pblapply
 .opta_to_spadl <- function(game_ids,
                            events_con = .settings$events_con,
@@ -18,7 +18,10 @@ NULL
                                     opta_cfg = opta_cfg)
     }
 
-    pblapply(game_ids, .wh) %>% rbindlist()
+    if (length(game_ids) == 1)
+        purrr::map_dfr(game_ids, .wh)
+    else
+        pblapply(game_ids, .wh) %>% rbindlist()
 }
 
 #' convert opta-events to SPADL
@@ -30,7 +33,7 @@ NULL
 #'     global package config
 #' @param ... extra parameters currently not used
 #' @return \code{tibble} representing SPADL info.
-#' @importFrom dplyr filter select
+#' @importFrom dplyr filter select pull
 #' @export
 #' @rdname spadl_conversion
 convert_events_to_spadl.opta_events <- function(events,
@@ -39,17 +42,15 @@ convert_events_to_spadl.opta_events <- function(events,
                                                 opta_cfg =
                                                     .settings$opta_config,
                                                 ...) {
+    ## arrange event in chronological order
+    events <- dplyr::arrange(events,
+                             .data$period_id, .data$minute, .data$second) %>%
+        filter(.data$period_id %in% c(1, 2)) %>%
+        left_join(opta_cfg$type_table, by = c("type_id" = "typeId"))
+
     ## number of events row per game
     nrows <- nrow(events)
-    ## arrange event in chronological order
-    events <- dplyr::arrange(events, events$minute, events$second,
-                             events$period_id)
 
-    ## left join for event name
-    events <- events %>% left_join(opta_cfg$type_table,
-                                   by = c("type_id" = "typeId")
-    )
-    browser()
     .parse_event <- function(idx_row) {
         event_ <- events[idx_row, ]
 
@@ -73,7 +74,7 @@ convert_events_to_spadl.opta_events <- function(events,
         event_$end_y <- y_pos_coord[2]
 
         ## body part index
-          body_part_id_ <- .get_body_parts(
+        body_part_id_ <- .get_body_parts(
             spadl_cfg$bodyparts$bodypart_name,
             event_$qualifiers[[1]],
             opta_cfg[["Q_head"]],
@@ -83,10 +84,8 @@ convert_events_to_spadl.opta_events <- function(events,
         ## body part name
         body_part_name_ <- spadl_cfg$bodyparts$bodypart_name[body_part_id_]
 
-
         ## action type name
         action_type_name <- .get_action_type(event_)
-
 
         ## result type name
         result_type_name <- .get_result_type(
@@ -109,37 +108,70 @@ convert_events_to_spadl.opta_events <- function(events,
                         type_name = action_type_name,
                         result_id = result_id_,
                         result_name = result_type_name
-                        )
-
-        event_ <- event_ %>% .owngoal_x_y() %>%
-            .check_dribble(q_dribble = opta_cfg[["Q_dribble"]])
+                        ) %>%
+            .owngoal_x_y()
 
         if (idx_row != nrows)
-            event_ <- .check_clearance(event_, .parse_event(idx_row + 1))
+            event_ <- .check_clearance(event_,
+                                       .parse_event(idx_row + 1)
+                                       )
 
         ## action type id
-        type_id <- which(
-          spadl_cfg$actiontypes$action_name == event_$type_name)
+        type_id <- filter(spadl_cfg$actiontypes,
+                          .data$action_name == event_$type_name) %>%
+            pull(.data$action_id)
         ## bind type_id after checking clearance and dribble
-        event_ <- cbind(event_, type_id = type_id)
-
-        event_
+        cbind(event_, type_id = type_id)
     }
 
     do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
+        .add_dribbles(spadl_cfg = spadl_cfg) %>%
     filter(.data$type_name != "non_action") %>%
-        select(-c(.data$qualifiers, .data$event_id, .data$outcome, .data$type)) %>%
-        setDT()
+        select(-c(.data$qualifiers, .data$event_id, .data$outcome, .data$type))
 }
 
-.check_dribble <- function(event_, q_dribble,
-                           opta_cfg = .settings$opta_config) {
-  qualifiers_keys <- names(event_$qualifiers[[1]])
-  if (q_dribble %in% qualifiers_keys) {
-    event_$type_name <- opta_cfg["dribble"][[1]]
-  }
+.add_dribbles <- function(events, spadl_cfg = .settings$spadl_config) {
+    actions_ <- events[-nrow(events), ]
+    next_actions_ <- events[-1, ]
 
-  event_
+    same_team <- actions_$team_id == next_actions_$team_id
+
+    dx <- actions_$end_x - next_actions_$start_x
+    dy <- actions_$end_y - next_actions_$start_y
+    dx[is.na(dx)] <- 0
+    dy[is.na(dy)] <- 0
+    far_enough <- dx ** 2 + dy ** 2 >= spadl_cfg$min_dribble_length ** 2
+    not_too_far <- dx ** 2 + dy ** 2 <= spadl_cfg$max_dribble_length ** 2
+
+    dt <- next_actions_$time_in_seconds - actions_$time_in_seconds
+    same_phase <- dt < spadl_cfg$max_dribble_duration
+
+    dribble_idx <- which(same_team & far_enough & not_too_far & same_phase)
+
+    prev <- actions_[dribble_idx, ]
+    nex <- next_actions_[dribble_idx, ]
+    dribbles <- nex
+    dribbles$time_in_seconds <- 0.5 * (prev$time_in_seconds +
+                                       nex$time_in_seconds)
+    dribbles$start_x <- prev$start_x
+    dribbles$start_y <- prev$start_y
+    dribbles$end_x <- nex$start_x
+    dribbles$end_y <- nex$start_y
+    dribbles$body_part_name <- "foot"
+    dribbles$body_part_id <- filter(spadl_cfg$bodyparts,
+                                    .data$bodypart_name == "foot") %>%
+        pull(.data$bodypart_id)
+    dribbles$type_name <- "dribble"
+    dribbles$type_id <- filter(spadl_cfg$actiontypes,
+                               .data$action_name == "dribble") %>%
+        pull(.data$action_id)
+    dribbles$result_name <- "success"
+    dribbles$result_id <- filter(spadl_cfg$results,
+                                 .data$result_name == "success") %>%
+        pull(.data$result_id)
+
+    rbind(events, na.omit(dribbles)) %>%
+        arrange(.data$period_id, .data$time_in_seconds)
 }
 
 .check_clearance <- function(event_, next_event_,
@@ -154,7 +186,7 @@ convert_events_to_spadl.opta_events <- function(events,
 ## get body part index
 .get_body_parts <- function(bodypart_name, qualifiers, q_head, q_other) {
     qualifiers_keys <- names(qualifiers)
-    if (q_head %in% qualifiers_keys)
+    if (any(q_head %in% qualifiers_keys))
         which(bodypart_name == "head")
     else if (q_other %in% qualifiers_keys)
         which(bodypart_name == "other")

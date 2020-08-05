@@ -2,7 +2,7 @@
 #'
 #' @param events events from SPADL
 #' @param fixtures_con fixtures db connection
-#' @importFrom data.table
+#' @import data.table
 #' @return \code{tibble} representing labels details.
 #' @export
 .spadl_to_labels <- function(events) {

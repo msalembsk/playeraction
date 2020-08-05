@@ -2,12 +2,9 @@
 #'
 #' @param events events from SPADL
 #' @param fixtures_con fixtures db connection
-#' @importFrom data.table
 #' @return \code{tibble} representing features details.
 #' @export
-.spadl_to_features <- function(events, fixtures_con =
-                                   .settings$fixtures_con) {
-
+.spadl_to_features <- function(events, fixtures_con = .settings$fixtures_con) {
   ## if spadl_events empty
   if (nrow(events) == 0)
     return(tibble())
@@ -24,7 +21,6 @@
 
   ## fix start end coordinates
   events <- events %>% .fix_start_end_coor(home_team_id = home_team_id)
-
 
   ## simple features
   type_id_features <- events$type_id %>% .shift_event_values %>%
