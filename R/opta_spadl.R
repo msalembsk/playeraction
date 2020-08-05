@@ -33,7 +33,7 @@ NULL
 #' @importFrom dplyr filter select
 #' @export
 #' @rdname spadl_conversion
-  convert_events_to_spadl.opta_events <- function(events,
+convert_events_to_spadl.opta_events <- function(events,
                                                 spadl_cfg =
                                                     .settings$spadl_config,
                                                 opta_cfg =
