@@ -32,6 +32,9 @@
     spadl_action_name <- .get_action_family(event_)
 
 
+
+
+
     tibble(action_name = spadl_action_name)
   }
 
@@ -48,6 +51,7 @@
                                instat_cfg = .settings$instat_config) {
   action_type <- event_$generic_action_type_name
   action_subtype_name <- event_$action_subtype_name
+  player_position <- event_$position_name
 
   action_name <- NULL
   if (action_type == "Pass"  & action_subtype_name %in%
@@ -68,6 +72,15 @@
   else if (action_type == "Cross" & action_subtype_name %in%
            instat_cfg$action_cross)
     action_name <- .cross_action_family(event_)
+  else if (action_type == "Interception" & action_subtype_name %in%
+           instat_cfg$action_interception)
+    action_name <- .interception_action_family(event_)
+  else if (action_type == "Bad Ball Control" & action_subtype_name %in%
+           instat_cfg$action_bad_control)
+    action_name <- .bad_control_action_family(event_)
+  else if (player_position == "Goalkeeper" & action_subtype_name %in%
+           instat_cfg$action_gk)
+    action_name <- .gk_action_family(event_)
 
 
 
@@ -96,7 +109,27 @@
   action_name
 }
 
-## simple action
+## interception action
+.interception_action_family <- function(interception_event_,
+                                        instat_cfg = .settings$instat_config) {
+  interception_action  <- interception_event_$action_subtype_name %in%
+    instat_cfg$action_interception
+  if (interception_action)
+    return("interception")
+}
+
+
+## bad ball control
+.bad_control_action_family <- function(bad_control_event_,
+                                       instat_cfg = .settings$instat_config) {
+  ball_touch_action <- bad_control_event_$action_subtype_name %in%
+    instat_cfg$action_bad_control
+
+  if (ball_touch_action)
+    return("ball_touch")
+}
+
+## cross action
 .cross_action_family <- function(cross_event_,
                                  instat_cfg = .settings$instat_config) {
 
@@ -121,7 +154,7 @@
   action_name
 }
 
-## simple action
+## discipline action
 .discipline_action_family <- function(discipline_event_,
                                        instat_cfg = .settings$instat_config) {
   action_name <- NULL
@@ -132,6 +165,7 @@
   action_name
 }
 
+## challenges actions
 .challenge_action_family <- function(challenge_event_,
                                      instat_cfg = .settings$instat_config) {
   action_name <- NULL
@@ -149,7 +183,7 @@
 
 }
 
-## simple action
+## clearance action
 .clearance_action_family <- function(clearance_event_,
                                       instat_cfg = .settings$instat_config) {
   action_name <- NULL
@@ -158,6 +192,26 @@
 
   if (clearance_action)
     action_name <- "clearance"
+
+  action_name
+}
+
+.gk_action_family <- function(gk_event_,
+                              instat_cfg = .settings$instat_config) {
+  action_name <- NULL
+
+  action_type <- gk_event_$action_subtype_name
+
+  gk_interception <- action_type %in% instat_cfg$gk_interception
+  keeper_save <- action_type %in% instat_cfg$keeper_save
+  keeper_pick_up <- action_type %in% instat_cfg$keper_pick_up
+
+  if (gk_interception)
+    action_name <- "keeper_save"
+  else if (gk_interception)
+    action_name <- "interception"
+  else if (keeper_pick_up)
+    action_name <- "keeper_pick_up"
 
   action_name
 }
