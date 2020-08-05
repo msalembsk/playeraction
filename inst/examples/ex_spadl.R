@@ -6,7 +6,7 @@ library(tibble)
 library(lubridate)
 library(magrittr)
 
-
+devtools::load_all()
 playeraction::set_db_all(database_type = "local", data_provider = "inStat")
 inStat_events <- playeraction::.instat_events_from_game(1171033)
 game_id <- 44108

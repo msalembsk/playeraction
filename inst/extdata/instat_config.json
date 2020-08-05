@@ -17,7 +17,7 @@
   ],
   "action_pass" :["Non attacking pass", "Attacking pass", "Key pass",
   "Extra attacking pass", "Key assist"],
-  "action_discipline" : ["Foul", "Offside", "Yellow card", "Red card" ],
+  "action_discipline" : ["Foul" ],
   "action_clearance" : ["Clearance"],
   "action_goal" : ["Goal"] ,
   "action_owngoal" : ["Owngoal"],

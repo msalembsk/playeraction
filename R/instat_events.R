@@ -15,14 +15,21 @@
   if (nrow(events) == 0)
     return(tibble())
 
-  ## number of events row per game
-  nrows <- nrow(events)
+  ## generic game info
+  home_team_id <- game_info$homeTeamId
+  home_team_name <- game_info$homeTeamName
+
+  away_team_id <- game_info$awayTeamId
+  away_team_name <- game_info$awayTeamName
+
+
 
   action_types <- instat_cfg$action_types
 
   ## get only useful events
   events <- events[which(events$generic_action_type_name %in% action_types), ]
-
+  ## number of events row per game
+  nrows <- nrow(events)
   ## fill missing bodypart with foot
   events$body_id[is.na(events$body_id)] <- 1L ## foot ID
   ## parse a single event by index
@@ -32,10 +39,30 @@
     spadl_action_name <- .get_action_family(event_)
 
 
+    period_id <- event_$half
+    time_in_seconds <- event_$second
+
+    player_id <- event_$player_id
+    player_name <- event_$player_name
+
+    team_id <- event_$team_id
+    team_name <- event_$team_name
 
 
+    tibble(game_id = game_id,
+           home_team_id = home_team_id,
+           home_team_name = home_team_name,
+           away_team_id = away_team_id,
+           away_team_name = away_team_name,
+           player_id = player_id,
+           player_name = player_name,
+           team_id = team_id,
+           team_name = team_name,
+           period_id = period_id,
+           time_in_seconds = time_in_seconds,
+           action_name = spadl_action_name)
 
-    tibble(action_name = spadl_action_name)
+
   }
 
   ## get all events from a given game_id
@@ -53,7 +80,7 @@
   action_subtype_name <- event_$action_subtype_name
   player_position <- event_$position_name
 
-  action_name <- NULL
+  action_name <- "non_action"
   if (action_type == "Pass"  & action_subtype_name %in%
       instat_cfg$action_pass)
     action_name <- .pass_action_family(event_)
@@ -206,7 +233,7 @@
   keeper_save <- action_type %in% instat_cfg$keeper_save
   keeper_pick_up <- action_type %in% instat_cfg$keper_pick_up
 
-  if (gk_interception)
+  if (keeper_save)
     action_name <- "keeper_save"
   else if (gk_interception)
     action_name <- "interception"
@@ -215,4 +242,3 @@
 
   action_name
 }
-
