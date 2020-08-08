@@ -12,6 +12,7 @@
     keys <- list(gameId = game_id)
     events_query <- buildQuery(names(keys), keys)
     events <- events_con$find(events_query)
+    home_team_id_ <- events[["homeTeamId"]][1]
 
     ## check if retrieved events collection is empty
     if (nrow(events) == 0)
@@ -106,6 +107,7 @@
                end_y = end_y_,
                assist = assist_,
                keypass = keypass_,
+               side = ifelse(team_id_ == home_team_id_, "home", "away"),
                qualifiers = to_l1(qualifiers_)
                )
     }

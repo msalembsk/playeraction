@@ -109,7 +109,8 @@ convert_events_to_spadl.opta_events <- function(events,
                         result_id = result_id_,
                         result_name = result_type_name
                         ) %>%
-            .owngoal_x_y()
+            .owngoal_x_y() %>%
+            .adjust_direction_play(spadl_cfg)
 
         if (idx_row != nrows)
             event_ <- .check_clearance(event_,
@@ -125,8 +126,8 @@ convert_events_to_spadl.opta_events <- function(events,
     }
 
     do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
+        filter(.data$type_name != "non_action") %>%
         .add_dribbles(spadl_cfg = spadl_cfg) %>%
-    filter(.data$type_name != "non_action") %>%
         select(-c(.data$qualifiers, .data$outcome, .data$type))
 }
 
@@ -138,10 +139,8 @@ convert_events_to_spadl.opta_events <- function(events,
 
     dx <- actions_$end_x - next_actions_$start_x
     dy <- actions_$end_y - next_actions_$start_y
-    dx[is.na(dx)] <- 0
-    dy[is.na(dy)] <- 0
-    far_enough <- dx ** 2 + dy ** 2 >= spadl_cfg$min_dribble_length ** 2
-    not_too_far <- dx ** 2 + dy ** 2 <= spadl_cfg$max_dribble_length ** 2
+    far_enough <- (dx ** 2 + dy ** 2) >= spadl_cfg$min_dribble_length ** 2
+    not_too_far <- (dx ** 2 + dy ** 2) <= spadl_cfg$max_dribble_length ** 2
 
     dt <- next_actions_$time_in_seconds - actions_$time_in_seconds
     same_phase <- dt < spadl_cfg$max_dribble_duration
@@ -153,8 +152,8 @@ convert_events_to_spadl.opta_events <- function(events,
     dribbles <- nex
     dribbles$time_in_seconds <- 0.5 * (prev$time_in_seconds +
                                        nex$time_in_seconds)
-    dribbles$start_x <- prev$start_x
-    dribbles$start_y <- prev$start_y
+    dribbles$start_x <- prev$end_x
+    dribbles$start_y <- prev$end_y
     dribbles$end_x <- nex$start_x
     dribbles$end_y <- nex$start_y
     dribbles$body_part_name <- "foot"
@@ -172,6 +171,18 @@ convert_events_to_spadl.opta_events <- function(events,
 
     rbind(events, na.omit(dribbles)) %>%
         arrange(.data$period_id, .data$time_in_seconds)
+}
+
+.adjust_direction_play <- function(event_, spadl_cfg) {
+    if (event_$side == "away") {
+        event_$start_x <- spadl_cfg$field_length - event_$start_x
+        event_$end_x <- spadl_cfg$field_length - event_$end_x
+
+        event_$start_y <- spadl_cfg$field_width - event_$start_y
+        event_$end_y <- spadl_cfg$field_width - event_$end_y
+    }
+
+    event_
 }
 
 .check_clearance <- function(event_, next_event_,
@@ -223,18 +234,19 @@ convert_events_to_spadl.opta_events <- function(events,
       action_name <-
           dplyr::case_when(
                      throw_in ~ opta_cfg["throw_in"][[1]],
-                     freekick ~ opta_cfg["freekick_short"][[1]],
                      corner & cross ~ opta_cfg["corner_crossed"][[1]],
                      freekick & cross ~ opta_cfg["freekick_crossed"][[1]],
+                     cross ~ opta_cfg["cross"][[1]],
+                     freekick ~ opta_cfg["freekick_short"][[1]],
                      corner ~ opta_cfg["corner_short"][[1]],
                      TRUE ~ opta_cfg["pass"][[1]]
                  )
   } else if (event_name %in% action_shots) {
       action_name <-
           dplyr::case_when(
-                     opta_cfg[["shot_penalty"]] %in%
+                     opta_cfg[["Q_shot_penalty"]] %in%
                      qualifiers_keys ~ opta_cfg["shot_penalty"][[1]],
-                     opta_cfg[["shot_freekick"]] %in%
+                     opta_cfg[["Q_shot_freekick"]] %in%
                      qualifiers_keys ~ opta_cfg["shot_freekick"][[1]],
                      TRUE ~ opta_cfg["shot"][[1]]
                  )
