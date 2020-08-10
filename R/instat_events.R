@@ -26,6 +26,10 @@
   nrows <- nrow(events)
   ## fill missing bodypart with foot
   events$body_id[is.na(events$body_id)] <- 1L ## foot ID
+
+  ## join with bodypart
+  events <- left_join(events, instat_cfg$bodypart_types,
+                      by = c("body_id" = "body_id"))
   ## parse a single event by index
   .parse_single_event <- function(idx_row) {
     ## get event by id
@@ -41,6 +45,9 @@
 
     team_id <- event_$team_id
     team_name <- event_$team_name
+
+    bodypart_id <- event_$bodypart_id
+    bodypart_name <- event_$bodypart_name
 
     c(second, minute, time_in_seconds) %<-%
       .time_in_seconds_minutes(event_$second, event_$half)
@@ -58,6 +65,8 @@
            time_in_seconds = time_in_seconds,
            player_id = player_id,
            player_name = player_name,
+           bodypart_id = bodypart_id,
+           bodypart_name = bodypart_name,
            team_id = team_id,
            team_name = team_name,
            action_name = spadl_action_name)
