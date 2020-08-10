@@ -104,7 +104,7 @@ spadl_action_name <- "non_action"
    spadl_action_name <- .take_on_action(event_)
  else if (event_$standart_name %in% instat_cfg$throw_in)
    spadl_action_name <- .throw_in_action(event_)
- else if (event_$standart_name %in% instat_cfg$clearance)
+ else if (event_$action_name %in% instat_cfg$clearance)
    spadl_action_name <- .clearance_action(event_)
  else if (event_$action_name %in% instat_cfg$pick_up &
           event_$position_id %in% instat_cfg$gk_pos_id)
@@ -315,3 +315,8 @@ spadl_action_name
     return("shot")
 
 }
+
+
+
+
+

@@ -56,7 +56,7 @@
   "spadl_name":"foul"
   },
   {
-  "generic_action_type_id":2,
+  "generic_action_type_id":6,
   "generic_action_type_name":"Interception",
   "spadl_name":"interception"
   },
