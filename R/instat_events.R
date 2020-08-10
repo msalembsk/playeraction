@@ -30,7 +30,10 @@
   .parse_single_event <- function(idx_row) {
     ## get event by id
     event_ <- events[idx_row, ]
-
+    if (idx_row < nrows)
+      next_event_ <- events[idx_row + 1, ]
+    else
+      next_event_ <- NULL
     period_id <- event_$half
 
     player_id <- event_$player_id
@@ -42,7 +45,7 @@
     c(second, minute, time_in_seconds) %<-%
       .time_in_seconds_minutes(event_$second, event_$half)
 
-    spadl_action_name <- .get_spadl_action_name(event_)
+    spadl_action_name <- .get_spadl_action_name(event_, next_event_)
 
     tibble(game_id = game_id,
            home_team_id = home_team_id,
@@ -91,7 +94,7 @@
 
 ## function to call the specific fn action
 ## TODO : avoid if else statement and replace it with switch case
-.get_spadl_action_name <- function(event_,
+.get_spadl_action_name <- function(event_, next_event_,
                                    instat_cfg = .settings$instat_config) {
 spadl_action_name <- "non_action"
  if (event_$generic_action_type_name %in% instat_cfg$shots)
@@ -122,9 +125,10 @@ spadl_action_name <- "non_action"
   else if (event_$generic_action_type_name %in% instat_cfg$cross)
     spadl_action_name <- .cross_action(event_)
   else if (event_$standart_name %in% instat_cfg$freekick)
-    spadl_action_name <- .freekick_action(event_)
+    spadl_action_name <- .freekick_action(event_, next_event_)
+
   else if (event_$standart_name %in% instat_cfg$corner)
-    spadl_action_name <- .corner_action(event_)
+    spadl_action_name <- .corner_action(event_, next_event_)
   else if (event_$standart_name %in% instat_cfg$pass_standart &
            event_$generic_action_type_name %in% instat_cfg$pass)
     spadl_action_name <- .pass_action(event_)
@@ -142,43 +146,40 @@ spadl_action_name <- "non_action"
 }
 
 ## corner
-.corner_action <- function(event_, action_types =
+.corner_action <- function(event_, next_event_, action_types =
                              .settings$instat_config$action_types) {
-  action_standart_id <- event_$standart_id
-  action_subtype_name <- event_$action_subtype_name
+  action_standart_id <- next_event_$standart_id
+  action_subtype_name <- next_event_$action_subtype_name
+  additional_marks <- event_$generic_action_type_id == 28L
   if (action_subtype_name == "set piece") {
     spadl_action_name <- action_types[
       which(action_types$standart_id == action_standart_id), ]$spadl_name
     return(spadl_action_name)
   }
-  else
+  else if (!additional_marks & action_subtype_name != "set piece")
     return("corner_short")
+  else
+    return("non_action")
+
 }
 
 ## freekick
-.freekick_action <- function(event_, action_types =
+.freekick_action <- function(event_, next_event_, action_types =
                                 .settings$instat_config$action_types) {
-  action_standart_id <- event_$standart_id
-  action_subtype_name <- event_$action_subtype_name
-  direct_freekick_id <- 4L
-  indirect_freekick_id <- 3L
-  if (action_standart_id == direct_freekick_id) {
+
+  action_subtype_name <- next_event_$action_subtype_name
+  additional_marks <- event_$generic_action_type_id == 28L
+
     if (action_subtype_name == "set piece") {
       spadl_action_name <- action_types[
-        which(action_types$standart_id == direct_freekick_id), ]$spadl_name
+        which(action_types$action_name == "free_kick"), ]$spadl_name
       return(spadl_action_name)
     }
-    else
+    else if (!additional_marks & action_subtype_name != "set piece")
       return("freekick_short")
-  } else if (action_standart_id == indirect_freekick_id) {
-    if (action_subtype_name == "set piece") {
-      spadl_action_name <- action_types[
-        which(action_types$standart_id == indirect_freekick_id), ]$spadl_name
-      return(spadl_action_name)
-    }
     else
-      return("freekick_short")
-  }
+      return("non_action")
+
 }
 
 ## cross
@@ -318,5 +319,6 @@ spadl_action_name
 
 
 
+.result_type_name <- function(event_, next_event_ ,action_name) {
 
-
+}

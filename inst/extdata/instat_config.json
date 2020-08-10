@@ -82,15 +82,7 @@
   "action_name":"Clearance",
   "spadl_name":"clearance"
   },
-  { "standart_id": 4,
-    "standart_name":"Direct free kick",
-    "generic_action_type_id":28,
-    "generic_action_type_name":"Additional markers",
-    "action_subtype_names":"set piece",
-    "spadl_name":"freekick_crossed"
-  },
-  { "standart_id": 3,
-    "standart_name":"Indirect free kick",
+  { "action_name": "free_kick",
     "generic_action_type_id":28,
     "generic_action_type_name":"Additional markers",
     "action_subtype_names":"set piece",
