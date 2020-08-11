@@ -38,44 +38,25 @@
       next_event_ <- events[idx_row + 1, ]
     else
       next_event_ <- NULL
-    period_id <- event_$half
 
-    player_id <- event_$player_id
-    player_name <- event_$player_name
 
-    team_id <- event_$team_id
-    team_name <- event_$team_name
-
-    bodypart_id <- event_$bodypart_id
-    bodypart_name <- event_$bodypart_name
 
     c(second, minute, time_in_seconds) %<-%
       .time_in_seconds_minutes(event_$second, event_$half)
 
     spadl_action_name <- .get_spadl_action_name(event_, next_event_)
 
-    tibble(game_id = game_id,
-           home_team_id = home_team_id,
-           home_team_name = home_team_name,
-           away_team_id = away_team_id,
-           away_team_name = away_team_name,
-           period_id = period_id,
-           second = second,
-           minute = minute,
+    tibble(event_,
+           seconds = second,
+           minutes = minute,
            time_in_seconds = time_in_seconds,
-           player_id = player_id,
-           player_name = player_name,
-           bodypart_id = bodypart_id,
-           bodypart_name = bodypart_name,
-           team_id = team_id,
-           team_name = team_name,
-           action_name = spadl_action_name)
+           spadl_action_name = spadl_action_name)
 
 
   }
   ## get all events from a given game_id
   res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event)) %>%
-    filter(.data$action_name != "non_action")
+    .result_type_name(.)  %>% filter(.data$spadl_action_name != "non_action")
 
   res
 }
@@ -135,7 +116,6 @@ spadl_action_name <- "non_action"
     spadl_action_name <- .cross_action(event_)
   else if (event_$standart_name %in% instat_cfg$freekick)
     spadl_action_name <- .freekick_action(event_, next_event_)
-
   else if (event_$standart_name %in% instat_cfg$corner)
     spadl_action_name <- .corner_action(event_, next_event_)
   else if (event_$standart_name %in% instat_cfg$pass_standart &
@@ -328,6 +308,52 @@ spadl_action_name
 
 
 
-.result_type_name <- function(event_, next_event_ ,action_name) {
+.result_type_name <- function(events) {
 
+  events$result_name <- "fail"
+
+  actions_ <- events[-nrow(events), ]
+  next_actions_ <- events[-1, ]
+  second_next_actions_ <- events[-2, ]
+
+  same_player <- actions_$player_id == next_actions_$player_id
+
+  ## Yellow Card action ID (next event)
+  is_yellow_card <- next_actions_$action_id == 3020L
+  yellow_card_idx <- which(same_player & is_yellow_card)
+
+  ## Red Card action ID (next event)
+  is_red_card <- next_actions_$action_id == 3030L
+  red_card_idx <- which(same_player & is_red_card)
+
+  ## offside can be after opening of a pass
+  ## not sure about the next action
+  is_offide <- second_next_actions_$action_id == 3040L &
+    second_next_actions_$second - actions_$second < 10
+
+  offside_idx <- which(is_offide)
+
+  goal_idx <- which(actions_$action_id == 8010L)
+
+
+  events[offside_idx-1, ]$result_name <- "offside"
+
+  events[yellow_card_idx, ]$result_name <- "yellow_card"
+
+  events[red_card_idx, ]$result_name <- "red_card"
+
+  events[goal_idx, ]$result_name <- "success"
+
+  is_success <-  !(actions_$spadl_action_name %in% c("shot","foul","offside")) &
+    actions_$outcome
+
+  success_idx <- which(is_success)
+
+  events[success_idx, ]$result_name <- "success"
+
+
+  events
 }
+
+
+
