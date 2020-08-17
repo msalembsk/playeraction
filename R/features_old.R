@@ -26,8 +26,8 @@
     type_id_features <- events$type_id %>% .shift_event_values %>%
         .bind_columns_features(attr = "type_id") %>% as.data.frame()
 
-    body_part_id_features <- events$type_id %>% .shift_event_values %>%
-        .bind_columns_features(attr = "body_part_id") %>% as.data.frame()
+    bodypart_id_features <- events$type_id %>% .shift_event_values %>%
+        .bind_columns_features(attr = "bodypart_id") %>% as.data.frame()
 
     result_id_features <- events$type_id %>% .shift_event_values %>%
         .bind_columns_features(attr = "result_id") %>% as.data.frame()
@@ -37,8 +37,8 @@
     type_name_features <- events %>% .type_name_features(type = "type") %>%
         as.data.frame()
 
-    body_part_name_features <- events %>%
-        .type_name_features(type = "body_part") %>% as.data.frame()
+    bodypart_name_features <- events %>%
+        .type_name_features(type = "bodypart") %>% as.data.frame()
 
     result_name_features <- events %>%
         .type_name_features(type = "result") %>% as.data.frame()
@@ -105,9 +105,9 @@
         .bind_columns_features(attr = "time_seconds_overall") %>%
         as.data.frame()
 
-    tibble(type_id_features, body_part_id_features,
+    tibble(type_id_features, bodypart_id_features,
            result_id_features, start_end_features,
-           type_name_features, body_part_name_features,
+           type_name_features, bodypart_name_features,
            result_name_features, start_dist_to_goal,
            start_angle_to_goal, end_dist_to_goal,
            end_angle_to_goal, team_features,
@@ -170,7 +170,7 @@
 
 
 ## type name features (type action , result , body part)
-.type_name_features <- function(events, type = c("type", "result", "body_part"),
+.type_name_features <- function(events, type = c("type", "result", "bodypart"),
                                 spadl_cfg = .settings$spadl_config) {
     if (type == "type")
         type_names <- spadl_cfg$actiontypes$action_name
@@ -303,8 +303,7 @@
 }
 
 .goal_score_features <- function(events) {
-
-  team_a <- events[1]$team_id
+  team_a <- events$team_id[1]
   goals <- grepl("shot", events$type_name) & events$result_name == "success"
   owngoals <- grepl("shot", events$type_name) & events$result_name == "owngoal"
   team_is_a <- events$team_id == team_a

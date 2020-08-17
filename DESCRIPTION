@@ -20,16 +20,18 @@ Imports:
   	 zeallot (>= 0.1),
      reticulate (>= 1.15),
      data.table (>= 1.12.8),
+     tidyr (>= 1.1.1),
      pbapply
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 
     'config.R'
-    'features.R'
-    'labels.R'
+    'features_old.R'
+    'labels_old.R'
+    'model_data.R'
     'opta_events.R'
     'opta_spadl.R'
     's3_generic.R'

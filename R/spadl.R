@@ -4,16 +4,20 @@
 #' regardless of the data provider used. Every data provider has his own
 #' implement class inheriting from the mother class.
 #' @name Spadl
-#' @import R6 tibble
+#' @import R6 tibble data.table
 Spadl = R6::R6Class("Spadl",
                     public = list(
-                      #' @field data \code{tibble} :: the SPADL values stored as data.table
-                      data = NULL,
+                        spadl_type = "standard",
+                        #' @field data \code{data.table} :: the SPADL values stored as data.table
+                        data = NULL,
 
-                      #' @field metadata \code{tibble} :: metadata such as team name,
-                      #' game-date, ... should have the same number of rows
-                      #' as `data` and same game-ids.
-                      metadata = NULL,
+                        #' @field metadata \code{tibble} :: metadata such as team name,
+                        #' game-date, ... should have the same number of rows
+                        #' as `data` and same game-ids.
+                        metadata = NULL,
+
+                        #' @field training_data
+                        training_data = NULL,
 
                       #' @description
                       #' Creates the 2 \code{tibble}(s) from mongo connections.
@@ -62,13 +66,78 @@ Spadl = R6::R6Class("Spadl",
                       },
 
                       #' @description
-                      #' Converts the object to a \code{tibble}
+                      #' Create model training data from Spadl or atomic Spadl
                       #'
-                      #' We simply join the \code{metadata} and \code{data}
-                      #' fields by \code{gameId}.
-                      #' @return \code{tibble}
-                      as_table = function() {
-                        left_join(self$metdata, self$data, by = "gameId")
+                      #' @return populates the \code{training_data} slot.
+                      get_model_data = function(nb_prev_actions = 3L, nr_actions = 10L,
+                                                labels = TRUE,
+                                                add_predictions = TRUE,
+                                                scores_learner = .settings$model_scores,
+                                                concedes_learner =
+                                                    .settings$model_concedes) {
+                          spadl_dt <- self$data
+
+                          ## find all game ids
+                          all_game_ids <- unique(spadl_dt[["game_id"]])
+                          .wh <- function(gm_id) {
+                              ans <- try(
+                                  .get_model_data(as_tibble(spadl_dt[game_id == gm_id]),
+                                                  nb_prev_actions, nr_actions, labels,
+                                                  self$spadl_type)
+                              )
+                              if (!inherits(ans, "try-error"))
+                                  return(ans)
+                          }
+
+                          ## training data
+                          dt <- pblapply(all_game_ids, .wh) %>% rbindlist()
+                          dt <- dt[, lapply(.SD, as.numeric)]
+                          dt[["scores"]] <- factor(ifelse(dt[["scores"]],
+                                                          "goal", "no_goal"),
+                                                   c("goal", "no_goal")
+                                                   )
+                          dt[["concedes"]] <- factor(ifelse(dt[["concedes"]],
+                                                          "goal", "no_goal"),
+                                                     c("goal", "no_goal")
+                                                     )
+
+                          ## task scores
+                          if (add_predictions) {
+                              if (length(all_game_ids) > 1)
+                                  stop("We should not predict more than one game at a time !")
+                              task_score <-
+                                  mlr3::TaskClassif$new(id = "scores",
+                                                        backend = select(dt, -.data$concedes),
+                                                        target = "scores")
+                              task_concede <-
+                                  mlr3:: TaskClassif$new(id = "concedes",
+                                                         backend = select(dt, -.data$scores),
+                                                         target = "concedes")
+
+                              ## probability
+                              scores_pb <- scores_learner$predict(task_score,
+                                                                  row_ids = 1:nrow(dt)
+                                                                  ) %>%
+                                  as.data.table() %>%
+                                  as.tibble()
+                              concedes_pb <- concedes_learner$predict(task_concede,
+                                                                      row_ids = 1:nrow(dt)
+                                                                      ) %>%
+                                  as.data.table() %>%
+                                  as.tibble()
+
+                              dt <- dplyr::mutate(dt,
+                                                  scores = scores_pb[["prob.goal"]],
+                                                  concedes = concedes_pb[["prob.goal"]])
+                              spadl_dt <- dplyr::mutate(spadl_dt,
+                                                        scores = scores_pb[["prob.goal"]],
+                                                        concedes = concedes_pb[["prob.goal"]]
+                                                        ) %>%
+                                  .get_vaep_values()
+                          }
+                          ## update object
+                          self$training_data <- dt
+                          self$data <- spadl_dt
                       }
                     ),
                     private = list(
@@ -85,18 +154,21 @@ SpadlOpta = R6::R6Class("SpadlOpta",
                             initialize =
                                 function(game_ids,
                                          fixture_con = .settings$fixtures_con,
-                                         events_con = .settings$events_con,
+                                         events_con = .settings$gameEvents_con,
                                          keypass_con =
                                              .settings[["playerKeyPasses_con"]],
                                          config = .settings$opta_config,
-                                         spadl_cfg = .settings$spadl_config) {
+                                         spadl_cfg = .settings$spadl_config,
+                                         spadl_type = c("standard", "atomic")) {
+                                    self$spadl_type <- match.arg(spadl_type)
+                                    ## call mother class initialize() to finish the job
+                                    super$initialize(game_ids, fixture_con)
+
                                     ## implement a method to fill in the data fields
                                     ## do it in another file
                                     self$data <- .opta_to_spadl(game_ids, events_con,
                                                                 keypass_con, spadl_cfg,
-                                                                config)
-                                    ## call mother class initialize() to finish the job
-                                    super$initialize(game_ids, fixture_con)
+                                                                config, self$spadl_type)
                                 }
                         )
 )

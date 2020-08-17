@@ -24,24 +24,26 @@ NULL
 #' @param collections_target character name of collection to connect to from
 #'     the \code{target_db} family
 #' @param project_name character project-name
-#' @import tryCatchLog futile.logger tidyverse aroundthegoal R6
+#' @import tryCatchLog futile.logger tidyverse aroundthegoal R6 reticulate
 #' @importFrom purrr map
 #' @export
-set_db_all <- function(json_config_file_name = "config_global_ra.json",
-                       json_config_path = "secrets",
-                       json_config_root = "",
-                       data_provider = c("opta", "inStat",
-                                         "STATS", "whoScored"),
-                       database_type = c("localhost", "prod", "prod_backup"),
-                       ## useful collections
-                       feed_collections = c("events", "fixtures", "players"),
-                       feats_collections = c("playerKeyPasses"),
-                       spadl_collections = c("features",
-                                             "action_values"),
-                       spadl_config = "spadl_config.json",
-                       opta_config = "opta_config.json",
-                       project_name = "playeraction") {
-
+set_db <- function(json_config_file_name = "config_global_ra.json",
+                   json_config_path = "secrets",
+                   json_config_root = "",
+                   data_provider = c("opta", "inStat",
+                                     "STATS", "whoScored"),
+                   database_type = c("localhost", "prod", "prod_backup"),
+                   ## useful collections
+                   feed_collections = c("events", "fixtures", "players", "gameEvents"),
+                   feats_collections = c("playerKeyPasses"),
+                   spadl_collections = c("features",
+                                         "action_values"),
+                   spadl_config = "spadl_config.json",
+                   opta_config = "opta_config.json",
+                   ## prediction models
+                   scores_model_path = "model_scores.RDS",
+                   concedes_model_path = "model_concedes.RDS",
+                   project_name = "playeraction") {
     ## ========================= json config
     json_config <- read_internal_data(file = json_config_file_name,
                                       path = json_config_path,
@@ -97,6 +99,19 @@ set_db_all <- function(json_config_file_name = "config_global_ra.json",
 
     ## info log file
     set_up_logger(ljson_config = json_config, project_name = project_name)
+
+    ## read prediction models
+    .settings$model_scores <- read_internal_data(
+        file = scores_model_path,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
+
+    .settings$model_concedes <- read_internal_data(
+        file = concedes_model_path,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
 
     ls(.settings, all.names = TRUE)
 }
