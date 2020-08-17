@@ -15,6 +15,7 @@ set_db(
   spadl_collections = c("features", "action_values"),
   spadl_config = "spadl_config.json",
   opta_config = "opta_config.json",
+  instat_config = "instat_config.json",
   scores_model_path = "model_scores.RDS",
   concedes_model_path = "model_concedes.RDS",
   project_name = "playeraction"

@@ -40,6 +40,7 @@ set_db <- function(json_config_file_name = "config_global_ra.json",
                                          "action_values"),
                    spadl_config = "spadl_config.json",
                    opta_config = "opta_config.json",
+                   instat_config = "instat_config.json",
                    ## prediction models
                    scores_model_path = "model_scores.RDS",
                    concedes_model_path = "model_concedes.RDS",
@@ -62,7 +63,11 @@ set_db <- function(json_config_file_name = "config_global_ra.json",
         pkg_name = "playeraction"
     )
 
-    ## TODO: add instat_config
+    .settings$instat_config <- read_internal_data(
+        file = instat_config,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
 
     ## ========================= mongo connections
     ## get the appropriate database

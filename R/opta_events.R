@@ -89,6 +89,7 @@
         pass_type <- event_$pass_type
         if (is.null(pass_type)) pass_type <- NA
         assist_ <- keypass_ <- FALSE
+
         if (!is.na(pass_type)) {
             if (pass_type == "key")
                 keypass_ <- TRUE

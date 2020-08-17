@@ -30,6 +30,7 @@ RoxygenNote: 7.1.1
 Collate: 
     'config.R'
     'features_old.R'
+    'instat_events.R'
     'labels_old.R'
     'model_data.R'
     'opta_events.R'
