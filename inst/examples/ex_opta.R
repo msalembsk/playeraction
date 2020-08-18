@@ -1,8 +1,11 @@
 library(mongoTools)
 library(futile.logger)
 
-game_id <- 1060077
-
+## Leicester vs Man utd
+game_id <- 44108
+## Serie B
+##game_id <- 1016937
+playeraction::set_db(database_type = "local", data_provider = "opta")
 spadl_opta <- SpadlOpta$new(game_id, spadl_type = "standard")
 flog.info(paste("Spadl representation created !"))
 

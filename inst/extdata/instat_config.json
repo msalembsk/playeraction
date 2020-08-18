@@ -120,31 +120,25 @@
   }
 ],  "bodypart_types" : [
   {
-    "bodypart_id": 2 ,
+    "bodypart_id": 1 ,
     "bodypart_name": "head",
     "body_id" : 3
 
   },
    {
-    "bodypart_id": 3 ,
-    "bodypart_name": "other",
-    "body_id" : 5
-
-  },
-   {
-    "bodypart_id": 1 ,
+    "bodypart_id": 0 ,
     "bodypart_name": "foot",
     "body_id" : 2
 
   },
    {
-    "bodypart_id": 1 ,
+    "bodypart_id": 0 ,
     "bodypart_name": "foot",
     "body_id" : 1
 
   },
    {
-    "bodypart_id": 3 ,
+    "bodypart_id": 2 ,
     "bodypart_name": "other",
     "body_id" : 4
 

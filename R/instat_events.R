@@ -2,7 +2,8 @@
 #' @export
 .instat_events_from_game <- function(game_id,
                                      events_con = .settings[["gameEvents_con"]],
-                                     instat_cfg = .settings$instat_config) {
+                                     instat_cfg = .settings$instat_config,
+                                     spadl_cfg = .settings$spadl_config) {
   ## get events per game
   keys <- list(gameId = game_id)
   game_query <- buildQuery(names(keys), keys)
@@ -29,6 +30,11 @@
   ## join with bodypart
   events <- left_join(events, instat_cfg$bodypart_types,
                       by = c("body_id" = "body_id"))
+
+  ## side
+  side <- ifelse(events$team_id == home_team_id, "home", "away")
+  events <- cbind(events, side = side)
+
   ## parse a single event by index
   .parse_single_event <- function(idx_row) {
     ## get event by id
@@ -39,23 +45,35 @@
       next_event_ <- NULL
 
 
-
     c(second, minute, time_in_seconds) %<-%
       .time_in_seconds_minutes(event_$second, event_$half)
 
     spadl_action_name <- .get_spadl_action_name(event_, next_event_)
 
-    tibble(event_,
-           seconds = second,
-           minutes = minute,
+
+    tibble(event_id = event_$id,
+           period_id = event_$half,
+           second = second,
+           minute = minute,
            time_in_seconds = time_in_seconds,
-           spadl_action_name = spadl_action_name)
-
-
+           start_x = event_$pos_x,
+           start_y = event_$pos_y,
+           end_x = event_$pos_dest_x,
+           end_y = event_$pos_dest_y,
+           player_id = event_$player_id,
+           type_name = spadl_action_name,
+           body_part_name = event_$bodypart_name,
+           body_part_id = event_$bodypart_id,
+           side = event_$side,
+           outcome = event_$outcome,
+           action_id = event_$action_id
+           )
   }
   ## get all events from a given game_id
   res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event)) %>%
-    .result_type_name(.)  %>% filter(.data$spadl_action_name != "non_action")
+    filter(.data$type_name != "non_action") %>%
+    .adjust_direction_play(., spadl_cfg) %>% .result_type_name(.) %>%
+    select(-c(outcome, action_id))
 
   res
 }
@@ -335,7 +353,7 @@ spadl_action_name
   goal_idx <- which(actions_$action_id == 8010L)
 
 
-  events[offside_idx-1, ]$result_name <- "offside"
+  events[offside_idx - 1, ]$result_name <- "offside"
 
   events[yellow_card_idx, ]$result_name <- "yellow_card"
 
@@ -343,7 +361,7 @@ spadl_action_name
 
   events[goal_idx, ]$result_name <- "success"
 
-  is_success <-  !(actions_$spadl_action_name %in% c("shot","foul","offside")) &
+  is_success <-  !(actions_$type_name %in% c("shot", "foul", "offside")) &
     actions_$outcome
 
   success_idx <- which(is_success)
@@ -355,4 +373,11 @@ spadl_action_name
 }
 
 
-
+.adjust_direction_play <- function(events, spadl_cfg = .settings$spadl_config) {
+  is_away <- which(events$side == "away")
+  events$start_x[is_away] <- spadl_cfg$field_length - events$start_x[is_away]
+  events$end_x[is_away] <- spadl_cfg$field_length - events$end_x[is_away]
+  events$start_y[is_away] <- spadl_cfg$field_width - events$start_y[is_away]
+  events$end_y[is_away] <- spadl_cfg$field_width - events$end_y[is_away]
+  events
+}
