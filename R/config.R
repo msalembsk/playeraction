@@ -42,8 +42,10 @@ set_db <- function(json_config_file_name = "config_global_ra.json",
                    opta_config = "opta_config.json",
                    instat_config = "instat_config.json",
                    ## prediction models
-                   scores_model_path = "model_scores.RDS",
-                   concedes_model_path = "model_concedes.RDS",
+                   scores_spadl_model_path = "model_spadl_scores.RDS",
+                   concedes_spadl_model_path = "model_spadl_concedes.RDS",
+                   scores_atomic_model_path = "model_atomic_scores.RDS",
+                   concedes_atomic_model_path = "model_atomic_concedes.RDS",
                    project_name = "playeraction") {
     ## ========================= json config
     json_config <- read_internal_data(file = json_config_file_name,
@@ -106,14 +108,26 @@ set_db <- function(json_config_file_name = "config_global_ra.json",
     set_up_logger(ljson_config = json_config, project_name = project_name)
 
     ## read prediction models
-    .settings$model_scores <- read_internal_data(
-        file = scores_model_path,
+    .settings$model_spadl_scores <- read_internal_data(
+        file = scores_spadl_model_path,
         path = file.path("inst", "extdata"),
         pkg_name = "playeraction"
     )
 
-    .settings$model_concedes <- read_internal_data(
-        file = concedes_model_path,
+    .settings$model_spadl_concedes <- read_internal_data(
+        file = concedes_spadl_model_path,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
+
+    .settings$model_atomic_scores <- read_internal_data(
+        file = scores_atomic_model_path,
+        path = file.path("inst", "extdata"),
+        pkg_name = "playeraction"
+    )
+
+    .settings$model_atomic_concedes <- read_internal_data(
+        file = concedes_atomic_model_path,
         path = file.path("inst", "extdata"),
         pkg_name = "playeraction"
     )

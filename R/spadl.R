@@ -71,10 +71,13 @@ Spadl = R6::R6Class("Spadl",
                       #' @return populates the \code{training_data} slot.
                       get_model_data = function(nb_prev_actions = 3L, nr_actions = 10L,
                                                 labels = TRUE,
-                                                add_predictions = TRUE,
-                                                scores_learner = .settings$model_scores,
-                                                concedes_learner =
-                                                    .settings$model_concedes) {
+                                                add_predictions = TRUE) {
+                          ## find appropriate learner
+                          scores_learner <- concedes_learner <- NULL
+                          c(scores_learner, concedes_learner) %<-%
+                              .extract_learner(self$spadl_type)
+
+
                           spadl_dt <- self$data
 
                           ## find all game ids
@@ -119,12 +122,12 @@ Spadl = R6::R6Class("Spadl",
                                                                   row_ids = 1:nrow(dt)
                                                                   ) %>%
                                   as.data.table() %>%
-                                  as.tibble()
+                                  as_tibble()
                               concedes_pb <- concedes_learner$predict(task_concede,
                                                                       row_ids = 1:nrow(dt)
                                                                       ) %>%
                                   as.data.table() %>%
-                                  as.tibble()
+                                  as_tibble()
 
                               dt <- dplyr::mutate(dt,
                                                   scores = scores_pb[["prob.goal"]],
@@ -133,7 +136,7 @@ Spadl = R6::R6Class("Spadl",
                                                         scores = scores_pb[["prob.goal"]],
                                                         concedes = concedes_pb[["prob.goal"]]
                                                         ) %>%
-                                  .get_vaep_values()
+                                  .get_vaep_values(type = self$spadl_type)
                           }
                           ## update object
                           self$training_data <- dt

@@ -34,3 +34,16 @@
 .convert_spadl_to_atomic <- function(spadl_df) {
     socceraction_py$atomic$spadl$convert_to_atomic(spadl_df)
 }
+
+.extract_learner <- function(spadl_type = c("standard", "atomic")) {
+    spadl_type <- match.arg(spadl_type)
+    if (spadl_type == "standard") {
+        scores_learner <- .settings$model_spadl_scores
+        concedes_learner <- .settings$model_spadl_concedes
+    } else if (spadl_type == "atomic") {
+        scores_learner <- .settings$model_atomic_scores
+        concedes_learner <- .settings$model_atomic_concedes
+    }
+
+    list(scores = scores_learner, concedes = concedes_learner)
+}
