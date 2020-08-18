@@ -1,9 +1,8 @@
 #' @import tibble mongoTools
 #' @export
 .instat_events_from_game <- function(game_id,
-                                   events_con = .settings$GameEvents_con,
-                                   instat_cfg = .settings$instat_config) {
-
+                                     events_con = .settings[["gameEvents_con"]],
+                                     instat_cfg = .settings$instat_config) {
   ## get events per game
   keys <- list(gameId = game_id)
   game_query <- buildQuery(names(keys), keys)

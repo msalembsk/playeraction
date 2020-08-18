@@ -3,7 +3,11 @@
 #' @importFrom aroundthegoal to_l1
 #' @export
 .opta_events_from_game <- function(game_id,
+<<<<<<< HEAD
                                    events_con = .settings$GameEvents_con,
+=======
+                                   events_con = .settings$gameEvents_con,
+>>>>>>> master
                                    keypass_con =
                                        .settings[["playerKeyPasses_con"]],
                                    opta_cfg = .settings$opta_config) {
@@ -11,9 +15,19 @@
     ## get events per game
     keys <- list(gameId = game_id)
     events_query <- buildQuery(names(keys), keys)
+<<<<<<< HEAD
     game_infos <- events_con$find(events_query)
     home_team_id_ <- game_infos[["homeTeamId"]][1]
     events <- game_infos$events[[1]]
+=======
+    events_ <- events_con$find(events_query)
+    ## reformat
+    events <- events_$events[[1]]
+    metadata <- select(events_, -.data$events)
+    events <- cbind.data.frame(events, metadata)
+    home_team_id_ <- metadata[["homeTeamId"]]
+
+>>>>>>> master
     ## check if retrieved events collection is empty
     if (nrow(events) == 0)
         return(tibble())
@@ -83,6 +97,7 @@
 
         ## keypass or assist if exists
         pass_type <- event_$pass_type
+        if (is.null(pass_type)) pass_type <- NA
         assist_ <- keypass_ <- FALSE
         if (!is.na(pass_type)) {
             if (pass_type == "key")
@@ -108,6 +123,10 @@
                assist = assist_,
                keypass = keypass_,
                side = ifelse(team_id_ == home_team_id_, "home", "away"),
+<<<<<<< HEAD
+=======
+               home_team_id = home_team_id_,
+>>>>>>> master
                qualifiers = to_l1(qualifiers_)
         )
     }

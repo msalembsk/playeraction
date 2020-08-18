@@ -1,0 +1,22 @@
+Action type,Description,Success?,Special result
+Pass,Normal pass in open play,Reaches teammate,Offside
+Cross,Cross into the box,Reaches teammate,Offside
+Throw-in,Throw-in,Reaches teammate,
+Crossed corner,Corner crossed into the box,Reaches teammate,Offside
+Short corner,Short corner,Reaches teammate,Offside
+Crossed free-kick,Free kick crossed into the box,Reaches teammate,Offside
+Short free-kick,Short free-kick,Reaches teammate,Offside
+Take on,Attempt to dribble past opponent,Keeps possession,
+Foul,Foul,Always fail,Red or yellow card
+Tackle,Tackle on the ball,Regains possession,
+Interception,Interception of the ball,Always success,
+Shot,Shot attempt not from penalty or free-kick,Goal,Own goal
+Penalty shot,Penalty shot,Goal,Own goal
+Free-kick shot,Direct free-kick on goal,Goal,Own goal
+Keeper save,Keeper saves a shot on goal,Always success,
+Keeper claim,Keeper catches a cross,Does not drop the ball,
+Keeper punch,Keeper punches the ball clear,Always success,
+Keeper pick-up,Keeper picks up the ball,Always success,
+Clearance,Player clearance,Always success,
+Bad touch,Player makes a bad touch and loses the ball,Always fail,
+Dribble,Player dribbles at least 3 meters with the ball Reaches teammate,Always success,

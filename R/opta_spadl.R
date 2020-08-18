@@ -3,10 +3,12 @@ NULL
 
 #' @importFrom data.table setDT rbindlist data.table
 #' @importFrom pbapply pblapply
+#' @importFrom dplyr mutate left_join
 .opta_to_spadl <- function(game_ids,
-                           events_con = .settings$events_con,
+                           events_con = .settings[["gameEvents_con"]],
                            keypass_con = .settings[["playerKeyPasses_con"]],
                            spadl_cfg = .settings$spadl_config,
+<<<<<<< HEAD
                            opta_cfg = .settings$opta_config) {
   ## work horse
   .wh <- function(game_id) {
@@ -17,6 +19,34 @@ NULL
       convert_events_to_spadl(spadl_cfg = spadl_cfg,
                               opta_cfg = opta_cfg)
   }
+=======
+                           opta_cfg = .settings$opta_config,
+                           spadl_type = c("standard", "atomic")) {
+    spadl_type <- match.arg(spadl_type)
+    ## work horse
+    .wh <- function(game_id) {
+        out <- .opta_events_from_game(game_id,
+                                      events_con = events_con,
+                                      keypass_con = keypass_con,
+                                      opta_cfg = opta_cfg) %>%
+            convert_events_to_spadl(spadl_cfg = spadl_cfg,
+                                    opta_cfg = opta_cfg)
+        ## extract some useful info
+        home_team_ <- out$home_team_id[1]
+        if (spadl_type == "atomic") {
+            out <- .convert_spadl_to_atomic(mutate(out,
+                                                   action_id = seq_len(nrow(out))
+                                                   )
+                                            ) %>%
+                mutate(home_team_id = home_team_) %>%
+                left_join(socceraction_py$atomic$spadl$actiontypes_df(),
+                          by = "type_id") %>%
+                left_join(spadl_cfg$bodyparts, by = "bodypart_id")
+        }
+
+        out
+    }
+>>>>>>> master
 
   if (length(game_ids) == 1)
     purrr::map_dfr(game_ids, .wh)
@@ -42,6 +72,7 @@ convert_events_to_spadl.opta_events <- function(events,
                                                 opta_cfg =
                                                   .settings$opta_config,
                                                 ...) {
+<<<<<<< HEAD
   ## arrange event in chronological order
   events <- dplyr::arrange(events,
                            .data$period_id, .data$minute, .data$second) %>%
@@ -181,8 +212,153 @@ convert_events_to_spadl.opta_events <- function(events,
     event_$start_y <- spadl_cfg$field_width - event_$start_y
     event_$end_y <- spadl_cfg$field_width - event_$end_y
   }
+=======
+    ## arrange event in chronological order
+    events <- dplyr::arrange(events,
+                             .data$period_id, .data$minute, .data$second) %>%
+        filter(.data$period_id %in% c(1, 2)) %>%
+        left_join(opta_cfg$type_table,
+                  by = c("type_id" = "typeId")
+                  )
 
-  event_
+    ## number of events row per game
+    nrows <- nrow(events)
+
+    .parse_event <- function(idx_row) {
+        event_ <- events[idx_row, ]
+
+        ## time in seconds
+        time_in_seconds_ <- 60 * event_$minute + event_$second
+
+        ## start coordinates formatting
+        x_pos_coord <- sapply(
+            c(event_$start_x, event_$end_x),
+            function(x) x / 100 * spadl_cfg$field_length
+        )
+        event_$start_x <- x_pos_coord[1]
+        event_$end_x <- x_pos_coord[2]
+
+        ## end coordinates formatting
+        y_pos_coord <- sapply(
+            c(event_$start_y, event_$end_y),
+            function(y) y <- y / 100 * spadl_cfg$field_width
+        )
+        event_$start_y <- y_pos_coord[1]
+        event_$end_y <- y_pos_coord[2]
+
+        ## body part index
+        bodypart_id_ <- .get_body_parts(
+            spadl_cfg$bodyparts,
+            event_$qualifiers[[1]],
+            opta_cfg[["Q_head"]],
+            opta_cfg[["Q_other"]]
+        )
+
+        ## body part name
+        bodypart_name_ <- filter(spadl_cfg$bodyparts,
+                                 .data$bodypart_id == bodypart_id_) %>%
+            pull(.data$bodypart_name)
+
+        ## action type name
+        action_type_name <- .get_action_type(event_)
+
+        ## result type name
+        result_type_name <- .get_result_type(
+            event_,
+            opta_cfg[["owngoal"]]
+        )
+
+        idx_result_id <- which(
+          spadl_cfg$results$result_name == result_type_name)
+        result_id_ <- spadl_cfg$results$result_id[idx_result_id]
+
+        ## remove old type_id
+        event_ <- event_ %>% select(-type_id)
+
+        ## add new columns to the event
+        event_ <- cbind(event_,
+                        bodypart_name = bodypart_name_,
+                        bodypart_id = bodypart_id_,
+                        time_seconds = time_in_seconds_,
+                        type_name = action_type_name,
+                        result_id = result_id_,
+                        result_name = result_type_name
+                        ) %>%
+            .owngoal_x_y() %>%
+            .adjust_direction_play(spadl_cfg)
+
+        if (idx_row != nrows)
+            event_ <- .check_clearance(event_,
+                                       .parse_event(idx_row + 1)
+                                       )
+
+        ## action type id
+        type_id <- filter(spadl_cfg$actiontypes,
+                          .data$action_name == event_$type_name) %>%
+            pull(.data$action_id)
+        ## bind type_id after checking clearance and dribble
+        cbind(event_, type_id = type_id)
+    }
+    
+    do.call(rbind, lapply(seq_len(nrows), .parse_event)) %>%
+        filter(.data$type_name != "non_action") %>%
+        .add_dribbles(spadl_cfg = spadl_cfg) %>%
+        select(-c(.data$qualifiers, .data$outcome, .data$type))
+}
+
+.add_dribbles <- function(events, spadl_cfg = .settings$spadl_config) {
+    actions_ <- events[-nrow(events), ]
+    next_actions_ <- events[-1, ]
+
+    same_team <- actions_$team_id == next_actions_$team_id
+
+    dx <- actions_$end_x - next_actions_$start_x
+    dy <- actions_$end_y - next_actions_$start_y
+    far_enough <- (dx ** 2 + dy ** 2) >= spadl_cfg$min_dribble_length ** 2
+    not_too_far <- (dx ** 2 + dy ** 2) <= spadl_cfg$max_dribble_length ** 2
+
+    dt <- next_actions_$time_seconds - actions_$time_seconds
+    same_phase <- dt < spadl_cfg$max_dribble_duration
+
+    dribble_idx <- which(same_team & far_enough & not_too_far & same_phase)
+
+    prev <- actions_[dribble_idx, ]
+    nex <- next_actions_[dribble_idx, ]
+    dribbles <- nex
+    dribbles$time_seconds <- 0.5 * (prev$time_seconds +
+                                       nex$time_seconds)
+    dribbles$start_x <- prev$end_x
+    dribbles$start_y <- prev$end_y
+    dribbles$end_x <- nex$start_x
+    dribbles$end_y <- nex$start_y
+    dribbles$bodypart_name <- "foot"
+    dribbles$bodypart_id <- filter(spadl_cfg$bodyparts,
+                                    .data$bodypart_name == "foot") %>%
+        pull(.data$bodypart_id)
+    dribbles$type_name <- "dribble"
+    dribbles$type_id <- filter(spadl_cfg$actiontypes,
+                               .data$action_name == "dribble") %>%
+        pull(.data$action_id)
+    dribbles$result_name <- "success"
+    dribbles$result_id <- filter(spadl_cfg$results,
+                                 .data$result_name == "success") %>%
+        pull(.data$result_id)
+
+    rbind(events, na.omit(dribbles)) %>%
+        arrange(.data$period_id, .data$time_seconds)
+}
+>>>>>>> master
+
+.adjust_direction_play <- function(event_, spadl_cfg) {
+    if (event_$side == "away") {
+        event_$start_x <- spadl_cfg$field_length - event_$start_x
+        event_$end_x <- spadl_cfg$field_length - event_$end_x
+
+        event_$start_y <- spadl_cfg$field_width - event_$start_y
+        event_$end_y <- spadl_cfg$field_width - event_$end_y
+    }
+
+    event_
 }
 
 .check_clearance <- function(event_, next_event_,
@@ -195,6 +371,7 @@ convert_events_to_spadl.opta_events <- function(events,
 }
 
 ## get body part index
+<<<<<<< HEAD
 .get_body_parts <- function(bodypart_name, qualifiers, q_head, q_other) {
   qualifiers_keys <- names(qualifiers)
   if (any(q_head %in% qualifiers_keys))
@@ -203,6 +380,19 @@ convert_events_to_spadl.opta_events <- function(events,
     which(bodypart_name == "other")
   else
     which(bodypart_name == "foot")
+=======
+.get_body_parts <- function(bodypart_cfg, qualifiers, q_head, q_other) {
+    qualifiers_keys <- names(qualifiers)
+    if (any(q_head %in% qualifiers_keys))
+        filter(bodypart_cfg, .data$bodypart_name == "head") %>%
+            pull(.data$bodypart_id)
+    else if (q_other %in% qualifiers_keys)
+        filter(bodypart_cfg, .data$bodypart_name == "other") %>%
+            pull(.data$bodypart_id)
+    else
+        filter(bodypart_cfg, .data$bodypart_name == "foot") %>%
+            pull(.data$bodypart_id)
+>>>>>>> master
 }
 
 ## action types
@@ -226,6 +416,7 @@ convert_events_to_spadl.opta_events <- function(events,
   if (event_name %in% action_types)
     action_name <- opta_cfg[event_name][[1]]
   else if (event_name %in% action_pass) {
+<<<<<<< HEAD
     freekick <- opta_cfg[["Q_freekick"]] %in% qualifiers_keys
     cross <- opta_cfg[["Q_cross"]] %in% qualifiers_keys
     corner <- opta_cfg[["Q_corner"]] %in% qualifiers_keys
@@ -250,6 +441,32 @@ convert_events_to_spadl.opta_events <- function(events,
           qualifiers_keys ~ opta_cfg["shot_freekick"][[1]],
         TRUE ~ opta_cfg["shot"][[1]]
       )
+=======
+      freekick <- opta_cfg[["Q_freekick"]] %in% qualifiers_keys
+      cross <- opta_cfg[["Q_cross"]] %in% qualifiers_keys
+      corner <- opta_cfg[["Q_corner"]] %in% qualifiers_keys
+      throw_in <- opta_cfg[["Q_throw_in"]] %in% qualifiers_keys
+
+      action_name <-
+          dplyr::case_when(
+                     throw_in ~ opta_cfg["throw_in"][[1]],
+                     corner & cross ~ opta_cfg["corner_crossed"][[1]],
+                     freekick & cross ~ opta_cfg["freekick_crossed"][[1]],
+                     cross ~ opta_cfg["cross"][[1]],
+                     freekick ~ opta_cfg["freekick_short"][[1]],
+                     corner ~ opta_cfg["corner_short"][[1]],
+                     TRUE ~ opta_cfg["pass"][[1]]
+                 )
+  } else if (event_name %in% action_shots) {
+      action_name <-
+          dplyr::case_when(
+                     opta_cfg[["Q_shot_penalty"]] %in%
+                     qualifiers_keys ~ opta_cfg["shot_penalty"][[1]],
+                     opta_cfg[["Q_shot_freekick"]] %in%
+                     qualifiers_keys ~ opta_cfg["shot_freekick"][[1]],
+                     TRUE ~ opta_cfg["shot"][[1]]
+                 )
+>>>>>>> master
   } else if (event_name %in% action_touch & !event$outcome)
     ## action touch
     action_name <- opta_cfg["bad_touch"][[1]]

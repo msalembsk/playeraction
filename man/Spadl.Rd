@@ -16,7 +16,7 @@ implement class inheriting from the mother class.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{data}}{\code{tibble} :: the SPADL values stored as data.table}
+\item{\code{data}}{\code{data.table} :: the SPADL values stored as data.table}
 
 \item{\code{metadata}}{\code{tibble} :: metadata such as team name,
 game-date, ... should have the same number of rows
@@ -30,7 +30,7 @@ as `data` and same game-ids.}
 \item \href{#method-new}{\code{Spadl$new()}}
 \item \href{#method-sanity_check}{\code{Spadl$sanity_check()}}
 \item \href{#method-insert}{\code{Spadl$insert()}}
-\item \href{#method-as_table}{\code{Spadl$as_table()}}
+\item \href{#method-get_model_data}{\code{Spadl$get_model_data()}}
 \item \href{#method-clone}{\code{Spadl$clone()}}
 }
 }
@@ -97,19 +97,23 @@ logical :: insertion status
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-as_table"></a>}}
-\if{latex}{\out{\hypertarget{method-as_table}{}}}
-\subsection{Method \code{as_table()}}{
-Converts the object to a \code{tibble}
-
-We simply join the \code{metadata} and \code{data}
-fields by \code{gameId}.
+\if{html}{\out{<a id="method-get_model_data"></a>}}
+\if{latex}{\out{\hypertarget{method-get_model_data}{}}}
+\subsection{Method \code{get_model_data()}}{
+Create model training data from Spadl or atomic Spadl
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Spadl$as_table()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Spadl$get_model_data(
+  nb_prev_actions = 3L,
+  nr_actions = 10L,
+  labels = TRUE,
+  add_predictions = TRUE,
+  scores_learner = .settings$model_scores,
+  concedes_learner = .settings$model_concedes
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-\code{tibble}
+populates the \code{training_data} slot.
 Handles the insertion in mongo
 }
 }

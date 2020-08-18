@@ -127,6 +127,10 @@
         {"typeId":74,"type":"blocked pass"},
         {"typeId":75,"type":"delayed start"},
         {"typeId":76,"type":"early end"},
-        {"typeId":77,"type":"player off pitch"}
+        {"typeId":77,"type":"player off pitch"},
+        {"typeId":79,"type":"Coverage interruption"},
+        {"typeId":80,"type":"Drop of ball"},
+        {"typeId":81,"type":"Obstacle"},
+        {"typeId":81,"type":"Attempted tackle"}
     ]
 }

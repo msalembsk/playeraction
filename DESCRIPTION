@@ -8,10 +8,10 @@ Authors@R: c(person("Salem", "Boussoukaya",
 	          email = "tarak@realanalytics.co.uk",
 		  role = "aut"))
 Description: Convert football event stream data to a standardised form and use to compute on the ball action values for soccer using various machine learning (ML) techniques. The package provides tools to extract and clean raw feed (as provided by various commercial data providers), store them efficiently, create features to fit various ML models. 
-Depends: R (>= 3.6.2)
+Depends: R (>= 4.0.2)
 Imports:
-  	 aroundthegoal (>= 1.2.3),
-     mongoTools (>= 2.1.0),
+  	 aroundthegoal (>= 1.4.0),
+     mongoTools (>= 2.2.0),
      tidyverse (>= 1.3),
      R6 (>= 2.4.1),
      tryCatchLog,
@@ -20,18 +20,20 @@ Imports:
   	 zeallot (>= 0.1),
      reticulate (>= 1.15),
      data.table (>= 1.12.8),
+     tidyr (>= 1.1.1),
      pbapply
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 
     'config.R'
-    'opta_events.R'
+    'features_old.R'
     'instat_events.R'
-    'features.R'
-    'labels.R'
+    'labels_old.R'
+    'model_data.R'
+    'opta_events.R'
     'opta_spadl.R'
     's3_generic.R'
     'spadl.R'
