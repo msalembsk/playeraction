@@ -1,4 +1,8 @@
-#' @import tibble mongoTools
+#' @param spadl_cfg list giving the SPADL config. Default is to read it from
+#'     global package config
+#'
+#' @return \code{tibble} representing instat to SPADL info.
+#' @import dplyr tibble mongoTools
 #' @export
 .instat_events_from_game <- function(game_id,
                                      events_con = .settings[["gameEvents_con"]],
@@ -15,18 +19,16 @@
   if (nrow(events) == 0)
     return(tibble())
 
-  ## generic game info
+  ## home team id
   home_team_id <- game_info$homeTeamId
-  home_team_name <- game_info$homeTeamName
 
-  away_team_id <- game_info$awayTeamId
-  away_team_name <- game_info$awayTeamName
-
-  ## number of events row per game
-  nrows <- nrow(events)
   ## fill missing bodypart with foot
   events$body_id[is.na(events$body_id)] <- 1L ## foot ID
 
+  ## remove useless rows
+  events <- events[!is.na(events$team_id), ]
+  ## number of events row per game
+  nrows <- nrow(events)
   ## join with bodypart
   events <- left_join(events, instat_cfg$bodypart_types,
                       by = c("body_id" = "body_id"))
@@ -44,14 +46,15 @@
     else
       next_event_ <- NULL
 
-
     c(second, minute, time_in_seconds) %<-%
       .time_in_seconds_minutes(event_$second, event_$half)
 
     spadl_action_name <- .get_spadl_action_name(event_, next_event_)
 
 
-    tibble(event_id = event_$id,
+
+    tibble(game_id = game_id,
+           event_id = event_$id,
            period_id = event_$half,
            second = second,
            minute = minute,
@@ -62,21 +65,26 @@
            end_y = event_$pos_dest_y,
            player_id = event_$player_id,
            type_name = spadl_action_name,
-           body_part_name = event_$bodypart_name,
-           body_part_id = event_$bodypart_id,
+           bodypart_name = event_$bodypart_name,
+           bodypart_id = event_$bodypart_id,
+           team_id = event_$team_id,
            side = event_$side,
+           home_team_id = home_team_id,
            outcome = event_$outcome,
            action_id = event_$action_id
            )
   }
   ## get all events from a given game_id
   res <- do.call(rbind, lapply(seq_len(nrows), .parse_single_event)) %>%
-    filter(.data$type_name != "non_action") %>%
-    .adjust_direction_play(., spadl_cfg) %>% .result_type_name(.) %>%
-    select(-c(outcome, action_id))
+    .result_type_name %>% filter(.data$type_name != "non_action") %>%
+    .direction_play_pos(., spadl_cfg) %>% .clearance_pos %>%
+    left_join(spadl_cfg$results,by = c("result_name" = "result_name")) %>%
+    select(-c(outcome, action_id)) %>% left_join(
+      spadl_cfg$actiontypes,by = c("type_name" = "action_name"))
 
   res
 }
+
 
 ## second/ minute/ time in seconds function
 .time_in_seconds_minutes <- function(time_in_seconds, half_period) {
@@ -323,8 +331,7 @@ spadl_action_name
 
 }
 
-
-
+## result spadl name
 .result_type_name <- function(events) {
 
   events$result_name <- "fail"
@@ -351,7 +358,7 @@ spadl_action_name
   offside_idx <- which(is_offide)
 
   goal_idx <- which(actions_$action_id == 8010L)
-
+  owngoal_idx <- which(actions_$action_id == 8020L)
 
   events[offside_idx - 1, ]$result_name <- "offside"
 
@@ -361,6 +368,8 @@ spadl_action_name
 
   events[goal_idx, ]$result_name <- "success"
 
+  events[owngoal_idx, ]$result_name <- "owngoal"
+
   is_success <-  !(actions_$type_name %in% c("shot", "foul", "offside")) &
     actions_$outcome
 
@@ -368,16 +377,26 @@ spadl_action_name
 
   events[success_idx, ]$result_name <- "success"
 
-
   events
 }
 
-
-.adjust_direction_play <- function(events, spadl_cfg = .settings$spadl_config) {
+## adjust playing direction
+.direction_play_pos <- function(events, spadl_cfg = .settings$spadl_config) {
   is_away <- which(events$side == "away")
   events$start_x[is_away] <- spadl_cfg$field_length - events$start_x[is_away]
   events$end_x[is_away] <- spadl_cfg$field_length - events$end_x[is_away]
   events$start_y[is_away] <- spadl_cfg$field_width - events$start_y[is_away]
   events$end_y[is_away] <- spadl_cfg$field_width - events$end_y[is_away]
+  events
+}
+
+## clearance shifted end position
+.clearance_pos <- function(events) {
+  next_actions_ <- events[-1, ]
+  is_clearance <- which(events$type_name == "clearance")
+
+  events$end_x[is_clearance] <- next_actions_$start_x[is_clearance]
+  events$end_y[is_clearance] <- next_actions_$start_y[is_clearance]
+
   events
 }

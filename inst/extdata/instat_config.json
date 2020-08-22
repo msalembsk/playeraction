@@ -98,6 +98,10 @@
 
 ],
 "shot_types":[
+  {
+    "action_id":8020,
+    "action_name":"Own goal"
+  },
 {
     "action_id":8010,
     "action_name":"Goal",
