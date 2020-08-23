@@ -36,7 +36,6 @@
   ## side
   side <- ifelse(events$team_id == home_team_id, "home", "away")
   events <- cbind(events, side = side)
-
   ## parse a single event by index
   .parse_single_event <- function(idx_row) {
     ## get event by id
@@ -333,10 +332,8 @@ spadl_action_name
 
 ## result spadl name
 .result_type_name <- function(events) {
-
   events$result_name <- "fail"
-
-  actions_ <- events[-nrow(events), ]
+  actions_ <- events[nrow(events), ]
   next_actions_ <- events[-1, ]
   second_next_actions_ <- events[-2, ]
 
@@ -357,8 +354,8 @@ spadl_action_name
 
   offside_idx <- which(is_offide)
 
-  goal_idx <- which(actions_$action_id == 8010L)
-  owngoal_idx <- which(actions_$action_id == 8020L)
+  goal_idx <- which(events$action_id == 8010L)
+  owngoal_idx <- which(events$action_id == 8020L)
 
   events[offside_idx - 1, ]$result_name <- "offside"
 
