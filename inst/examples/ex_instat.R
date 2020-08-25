@@ -10,6 +10,8 @@ library(magrittr)
 game_id <- 1485159L
 devtools::load_all()
 playeraction::set_db(database_type = "local", data_provider = "inStat")
+instat_spadl <- playeraction::.instat_spadl(game_id)
+
 inStat_spadl <- playeraction::.instat_events_from_game(game_id)
 
 

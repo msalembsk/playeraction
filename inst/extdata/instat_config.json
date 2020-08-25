@@ -1,128 +1,19 @@
 {
-  "shots": ["Shot","Goal"],
-  "bad_touch" : ["Bad ball control"],
-  "dribble": ["Possession"],
-  "take_on" : ["Dribble"],
-  "throw_in":["Throw-in"],
-  "clearance" : ["Clearance"],
-  "pick_up" : ["Free ball pick up"],
-  "gk_pos_id" : [31],
-  "keeper_claim":["Good interception of goalkeeper"],
-  "keeper_save":["Save"],
-  "tackle":["Tackle"],
-  "foul":["Foul"],
-  "interception":["Interception"],
-  "cross": ["Cross"],
-  "freekick": ["Indirect free kick", "Direct free kick"],
-  "corner":["Corner"],
-  "pass": ["Pass"],
-  "pass_standart" : ["Open play"],
-  "action_types": [
-  {
-    "action_id":21000,
-    "action_name":"Possession",
-    "spadl_name": "dribble"
-  },
-
-  {
-    "standart_id":1,
-    "standart_name":"Open play",
-    "action_name":"Pass",
-    "spadl_name": "pass"
-  },
-  {
-    "standart_id":2,
-    "standart_name":"Throw-in",
-    "spadl_name": "throw_in"
-  },
-  {
-    "action_id":10000,
-    "action_name":"Bad ball control",
-    "spadl_name": "bad_touch"
-  },
-  {
-  "generic_action_type_id":26,
-  "generic_action_type_name":"Cross",
-  "spadl_name":"cross"
-  },
-  {
-  "generic_action_type_id":2,
-  "action_subtype_name":"Dribble",
-  "spadl_name":"take_on"
-  },
-  {
-  "action_id":3010,
-  "action_name":"Foul",
-  "spadl_name":"foul"
-  },
-  {
-  "generic_action_type_id":6,
-  "generic_action_type_name":"Interception",
-  "spadl_name":"interception"
-  },
-  {
-  "generic_action_type_id":6,
-  "action_subtype_name":"Tackle",
-  "spadl_name":"tackle"
-  },
-  {"action_id":13040,
-  "action_name":"Save",
-  "spadl_name":"keeper_save"
-  },
-  {"action_id":13011,
-  "action_name":"Good interception of goalkeeper",
-  "spadl_name":"keeper_claim"
-  },
-  {"action_id":7000,
-  "action_name":"Free ball pick up",
-  "position_id":31,
-  "spadl_name":"keeper_pick_up"
-  },
-  {"action_id":9000,
-  "action_name":"Clearance",
-  "spadl_name":"clearance"
-  },
-  { "action_name": "free_kick",
-    "generic_action_type_id":28,
-    "generic_action_type_name":"Additional markers",
-    "action_subtype_names":"set piece",
-    "spadl_name":"freekick_crossed"
-  },
-  { "standart_id": 5,
-    "standart_name":"Corner",
-    "generic_action_type_id":28,
-    "generic_action_type_name":"Additional markers",
-    "action_subtype_names":"set piece",
-    "spadl_name":"corner_crossed"
-  }
-
+"spdal_instat_columns" : [
+"id",
+"half",
+"type_name",
+"result_name",
+"time_in_seconds",
+"side",
+"player_id",
+"pos_x",
+"pos_y",
+"pos_dest_x",
+"pos_dest_y",
+"body_id"
 ],
-"shot_types":[
-  {
-    "action_id":8020,
-    "action_name":"Own goal"
-  },
-{
-    "action_id":8010,
-    "action_name":"Goal",
-    "spadl_name": "shot"
-  },
-  {"attack_type_id":5,
-  "attack_type_name":"Penalty attack",
-  "spadl_name":"shot_penalty"
-  },
-  {"standart_id":4,
-  "standart_name":"Direct free kick",
-  "generic_action_type_id":4,
-  "generic_action_type_name":"Shot",
-  "spadl_name":"shot_freekick"
-  },
-  {
-  "generic_action_type_id":4,
-  "generic_action_type_name":"Shot",
-  "spadl_name":"shot"
-  }
-],  "bodypart_types" : [
+"bodypart_types" : [
   {
     "bodypart_id": 1 ,
     "bodypart_name": "head",
