@@ -10,8 +10,8 @@ library(magrittr)
 game_id <- 1485159L
 devtools::load_all()
 playeraction::set_db(database_type = "local", data_provider = "inStat")
-instat_spadl <- playeraction::.instat_spadl(game_id)
+spadl_instat <- SpadlInStat$new(game_id, spadl_type = "standard")
+flog.info(paste("Spadl representation created !"))
 
-inStat_spadl <- playeraction::.instat_events_from_game(game_id)
 
 

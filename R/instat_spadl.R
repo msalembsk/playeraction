@@ -1,11 +1,45 @@
+#' @export
+.instat_to_spadl <- function(game_ids, events_con = .settings$gameEvents_con,
+                             instat_cfg = .settings$instat_config,
+                             spadl_cfg = .settings$spadl_config,
+                             spadl_type = c("standard", "atomic")) {
+  spadl_type <- match.arg(spadl_type)
+  ## work horse
+  .wh <- function(game_id) {
+     out <- .convert_instat_events_spadl(game_id, events_con = events_con,
+                  instat_cfg = instat_cfg,
+                  spadl_cfg = spadl_cfg)
+    ## extract some useful info
+    home_team_ <- out$home_team_id[1]
+    if (spadl_type == "atomic") {
+      out <- .convert_spadl_to_atomic(mutate(out,
+                                             action_id = seq_len(nrow(out))
+      )
+      ) %>%
+        mutate(home_team_id = home_team_) %>%
+        left_join(socceraction_py$atomic$spadl$actiontypes_df(),
+                  by = "type_id") %>%
+        left_join(spadl_cfg$bodyparts, by = "bodypart_id")
+    }
+
+    out
+
+  }
+
+  pblapply(game_ids, .wh) %>% rbindlist()
+
+}
+
+
+
 #' @param spadl_cfg list giving the SPADL config. Default is to read it from
 #'     global package config
 #'
 #' @return \code{tibble} representing instat to SPADL info.
 #' @import dplyr tibble mongoTools
 #' @export
-.instat_spadl <- function(game_id,
-                                     events_con = .settings[["gameEvents_con"]],
+.convert_instat_events_spadl <- function(game_id,
+                                     events_con = .settings$gameEvents_con,
                                      instat_cfg = .settings$instat_config,
                                      spadl_cfg = .settings$spadl_config) {
   ## get events per game
@@ -39,7 +73,6 @@
 
   ## arrange event in chronological order
   events <- dplyr::arrange(events, .data$time_in_seconds)
-  browser()
   events <- events  %>%
     .result_type_name %>% filter(.data$type_name != "non_action") %>%
     .direction_play_pos(., spadl_cfg) %>% .clearance_pos %>%
@@ -216,7 +249,7 @@
 
 ## unsuccessfull_dribbling action ID : 2052
 ## successfull tackle action ID : 2031
-tackle_idx <- which(instat_events$action_id %in% c(2052L, 2031L))
+tackle_idx <- which(events$action_id %in% c(2052L, 2031L))
 tackles_events <- events[tackle_idx, ]
 tackles_events$type_name <- "tackle"
 
@@ -307,7 +340,7 @@ tackles_events
 .get_keeper_save <- function(events) {
 
   ## consider good interception as a save action_ID :13011
-  keeper_save_idx <- which(instat_events$action_id %in% c(13040L, 13011L))
+  keeper_save_idx <- which(events$action_id %in% c(13040L, 13011L))
   keeper_save_events <- events[keeper_save_idx, ]
   keeper_save_events$type_name <- "keeper_save"
 

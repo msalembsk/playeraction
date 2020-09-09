@@ -179,13 +179,24 @@ SpadlOpta = R6::R6Class("SpadlOpta",
 SpadlInStat = R6::R6Class("SpadlInStat",
                           inherit = Spadl,
                           public = list(
-                              initialize = function(game_ids, fixture_con, events_con) {
-                              ## implement a method to fill in the data fields
-                              ## do it in another file
-                              self$data <- .instat_to_spadl(game_ids, events_con)
+                              initialize = function(game_ids,
+                                                    fixture_con = .settings$fixtures_con,
+                                                    events_con = .settings$gameEvents_con,
+                                                    instat_cfg = .settings$instat_config,
+                                                    spadl_cfg = .settings$spadl_config,
+                                                    spadl_type = c("standard", "atomic")) {
 
                               ## call mother class initialize() to finish the job
                               super$initialize(game_ids, fixture_con)
+
+
+                              self$spadl_type <- match.arg(spadl_type)
+                              ## implement a method to fill in the data fields
+                              ## do it in another file
+                              self$data <- .instat_to_spadl(game_ids, events_con,
+                                                            instat_cfg, spadl_cfg, self$spadl_type)
+
+
                             }
                           )
 )
