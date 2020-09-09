@@ -1,7 +1,7 @@
 library(mongoTools)
 library(futile.logger)
 
-game_id <- 1060077
+game_id <- 1060077L
 
 spadl_opta <- SpadlOpta$new(game_id, spadl_type = "standard")
 flog.info(paste("Spadl representation created !"))
