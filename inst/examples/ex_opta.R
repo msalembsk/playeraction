@@ -3,8 +3,6 @@ library(futile.logger)
 
 ## Leicester vs Man utd
 game_id <- 1060077
-## Serie B
-game_id <- 1016937
 playeraction::set_db(database_type = "local", data_provider = "opta")
 spadl_opta <- SpadlOpta$new(game_id, spadl_type = "standard")
 flog.info(paste("Spadl representation created !"))

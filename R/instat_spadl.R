@@ -57,7 +57,7 @@
   home_team_id <- game_info$homeTeamId
 
   ## fill missing bodypart with foot
-  events$body_id[is.na(events$body_id)] <- 1L ## foot ID
+  events$body_id[which(is.na(events$body_id))] <- 1L ## foot ID
 
   ## add time in seconds
   events <- events %>% cbind(time_in_seconds =  .get_time_in_seconds(events),
@@ -76,11 +76,31 @@
   events <- events  %>%
     .result_type_name %>% filter(.data$type_name != "non_action") %>%
     .direction_play_pos(., spadl_cfg) %>% .clearance_pos %>%
-    .instat_to_spadl_columns(., game_id = game_id,
+    .instat_to_spadl_columns(., game_id = game_id %>% as.integer(),
                              home_team_id = home_team_id,
-                             instat_cfg, spadl_cfg)
+                             instat_cfg, spadl_cfg) %>% .fix_end_action_position
 
   events
+}
+
+.fix_end_action_position <- function(events) {
+same_start_pos <- c("tackle", "interception", "bad_touch",
+                         "take_on", "keeper_pick_up", "keeper_save")
+
+next_start_pos <- c("dribble", "clearance")
+
+is_same_start_pos_idx <- which(events$type_name %in% same_start_pos)
+is_next_start_pos_idx <- which(events$type_name %in% next_start_pos)
+
+
+events$end_x[is_same_start_pos_idx] <- events$start_x[is_same_start_pos_idx]
+events$end_y[is_same_start_pos_idx] <- events$start_y[is_same_start_pos_idx]
+
+events$end_x[is_next_start_pos_idx] <- events$start_x[is_next_start_pos_idx + 1]
+events$end_y[is_next_start_pos_idx] <- events$start_y[is_next_start_pos_idx + 1]
+
+
+events
 }
 
 .playing_side <- function(events, home_team_id) {
@@ -104,9 +124,10 @@
   ## remove factor levels
   events$type_name <- as.character(events$type_name)
   ## seconds
-  seconds <- events$time_in_seconds %% 60
+  seconds <- as.integer(events$time_in_seconds %% 60)
   ## minutes
   minutes <- as.integer(events$time_in_seconds / 60)
+
 
   events <-  events %>% select(instat_cfg$spdal_instat_columns) %>%
     rename(event_id = id,
@@ -122,8 +143,9 @@
           minute = minutes) %>%
     left_join(spadl_cfg$results, by = c("result_name" = "result_name"))  %>%
     left_join(spadl_cfg$actiontypes, by = c("type_name" = "action_name")) %>%
-    left_join(instat_cfg$bodypart_types, by = c("body_id" = "bodypart_id")) %>%
-    select(-c(body_id.y))
+    rename(type_id = action_id) %>%
+    left_join(instat_cfg$bodypart_types, by = c("body_id" = "body_id")) %>%
+    select(-c(body_id))
 
   events
 }

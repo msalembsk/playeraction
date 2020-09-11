@@ -6,6 +6,7 @@
 "result_name",
 "time_in_seconds",
 "side",
+"team_id",
 "player_id",
 "pos_x",
 "pos_y",
@@ -35,7 +36,7 @@
    {
     "bodypart_id": 2 ,
     "bodypart_name": "other",
-    "body_id" : 4
+    "body_id" : 5
 
   }
 ]

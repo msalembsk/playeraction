@@ -132,6 +132,7 @@ Spadl = R6::R6Class("Spadl",
                               dt <- dplyr::mutate(dt,
                                                   scores = scores_pb[["prob.goal"]],
                                                   concedes = concedes_pb[["prob.goal"]])
+
                               spadl_dt <- dplyr::mutate(spadl_dt,
                                                         scores = scores_pb[["prob.goal"]],
                                                         concedes = concedes_pb[["prob.goal"]]
