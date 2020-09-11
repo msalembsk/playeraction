@@ -1,4 +1,5 @@
 library(mongoTools)
+library(purrr)
 
 ## mongo connections
 spadl_con <- mongo("Spadl", "opta")
@@ -11,6 +12,8 @@ keys <- list(seasonId = 2018:2019, competitionId = c(8, 10, 21:24))
 qr <- buildQuery(names(keys), keys)
 
 game_ids <- .settings$gameEvents_con$distinct("gameId", qr)
+in_game_ids <- spadl_atomic_features_con$distinct("game_id")
+mss_game_ids <- game_ids[!game_ids %in% in_game_ids]
 
 .wh <- function(game_id) {
     ## standard spadl
@@ -53,3 +56,5 @@ game_ids <- .settings$gameEvents_con$distinct("gameId", qr)
     spadl_atomic_con$insert(spadl_opta_atomic_dt)
     spadl_atomic_features_con$insert(spadl_opta_atomic_training_dt)
 }
+
+x <- map(mss_game_ids, safely(.wh))
