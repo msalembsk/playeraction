@@ -8,7 +8,7 @@ spadl_atomic_con <- mongo("AtomicSpadl", "inStat")
 spadl_atomic_features_con <- mongo("AtomicSpadlFeatures", "inStat")
 playeraction::set_db(database_type = "local", data_provider = "inStat")
 
-SEASON_IDS <- 2016:2019
+SEASON_IDS <- 2014:2019
 COMP_IDS <- c(316, ## Tunisia Ligue 1
               193, ## Algeria Ligue1
               140, ## Egypt Premier League

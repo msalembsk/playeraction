@@ -85,18 +85,25 @@
 same_start_pos <- c("tackle", "interception", "bad_touch",
                          "take_on", "keeper_pick_up", "keeper_save")
 
-next_start_pos <- c("dribble", "clearance")
+next_start_pos <- c("dribble", "clearance", "freekick_short")
 
-is_same_start_pos_idx <- which(events$type_name %in% same_start_pos)
-is_next_start_pos_idx <- which(events$type_name %in% next_start_pos)
-
-
+is_same_start_pos_idx <- which(events$type_name %in% same_start_pos )
 events$end_x[is_same_start_pos_idx] <- events$start_x[is_same_start_pos_idx]
 events$end_y[is_same_start_pos_idx] <- events$start_y[is_same_start_pos_idx]
 
+## event type that need next event position
+is_next_start_pos_idx <- which(events$type_name %in% next_start_pos)
 events$end_x[is_next_start_pos_idx] <- events$start_x[is_next_start_pos_idx + 1]
 events$end_y[is_next_start_pos_idx] <- events$start_y[is_next_start_pos_idx + 1]
 
+
+## last event if end_x or end_y is NA
+nrows <- nrow(events)
+
+if (is.na(events$end_x[nrows]) & is.na(events$end_y[nrows])) {
+  events$end_x[nrows] <-  events$start_x[nrows]
+  events$end_y[nrows] <-  events$start_y[nrows]
+}
 
 events
 }
@@ -233,8 +240,10 @@ events
                                 %in% c(27L, 18L))
 
   freekick_events <- raw_freekick_events[is_real_freekick_idx, ]
-  ## initialize type name as freekick_short
-  freekick_events$type_name <- "freekick_short"
+
+  if (nrow(freekick_events) > 0)
+    ## initialize type name as freekick_short
+    freekick_events$type_name <- "freekick_short"
 
 
   ## check next actions to verify crossed freekick or not
@@ -263,7 +272,8 @@ events
   dribble_idx <- which(events$action_id == 21000L)
 
   dribble_events <- events[dribble_idx, ]
-  dribble_events$type_name <- "dribble"
+  if (nrow(dribble_events) > 0)
+    dribble_events$type_name <- "dribble"
 
   dribble_events
 }
@@ -274,7 +284,8 @@ events
 ## successfull tackle action ID : 2031
 tackle_idx <- which(events$action_id %in% c(2052L, 2031L))
 tackles_events <- events[tackle_idx, ]
-tackles_events$type_name <- "tackle"
+if (nrow(tackles_events) > 0)
+  tackles_events$type_name <- "tackle"
 
 tackles_events
 }
@@ -284,7 +295,8 @@ tackles_events
   cross_idx <- which(events$generic_action_type_id == 26L)
 
   cross_events <- events[cross_idx, ]
-  cross_events$type_name <- "cross"
+  if (nrow(cross_events) > 0)
+    cross_events$type_name <- "cross"
 
   cross_events
 }
@@ -294,7 +306,8 @@ tackles_events
   foul_idx <- which(events$action_id == 3010L)
 
   foul_events <- events[foul_idx, ]
-  foul_events$type_name <- "foul"
+  if (nrow(foul_events) > 0)
+    foul_events$type_name <- "foul"
 
   foul_events
 }
@@ -304,7 +317,9 @@ tackles_events
   interpections_idx <- which(events$action_id == 6020L)
 
   interception_events <- events[interpections_idx, ]
-  interception_events$type_name <- "interception"
+
+  if (nrow(interception_events) > 0)
+    interception_events$type_name <- "interception"
 
   interception_events
 }
@@ -336,7 +351,8 @@ tackles_events
 
   pass_events <- events[which(is_open_play & is_pass), ]
 
-  pass_events$type_name <- "pass"
+  if (nrow(pass_events) > 0)
+    pass_events$type_name <- "pass"
 
   pass_events
 }
@@ -345,7 +361,9 @@ tackles_events
   throw_in_idx <- which(events$standart_id == 2L)
 
   throw_in_events <- events[throw_in_idx, ]
-  throw_in_events$type_name <- "throw_in"
+
+  if (nrow(throw_in_events) > 0)
+    throw_in_events$type_name <- "throw_in"
 
   throw_in_events
 }
@@ -355,7 +373,9 @@ tackles_events
   take_on_idx <- which(events$action_id == 21000L)
 
   take_on_events <- events[take_on_idx, ]
-  take_on_events$type_name <- "take_on"
+
+  if (nrow(take_on_events) > 0)
+    take_on_events$type_name <- "take_on"
 
   take_on_events
 }
@@ -365,7 +385,9 @@ tackles_events
   ## consider good interception as a save action_ID :13011
   keeper_save_idx <- which(events$action_id %in% c(13040L, 13011L))
   keeper_save_events <- events[keeper_save_idx, ]
-  keeper_save_events$type_name <- "keeper_save"
+
+  if (nrow(keeper_save_events) > 0)
+    keeper_save_events$type_name <- "keeper_save"
 
   keeper_save_events
 }
@@ -376,7 +398,9 @@ tackles_events
 
   keeper_pick_up_idx <- which(is_pick_up & is_gk)
   keeper_pick_up_events <- events[keeper_pick_up_idx, ]
-  keeper_pick_up_events$type_name <- "keeper_pick_up"
+
+  if (nrow(keeper_pick_up_events) > 0)
+    keeper_pick_up_events$type_name <- "keeper_pick_up"
 
   keeper_pick_up_events
 }
@@ -385,7 +409,8 @@ tackles_events
   clearance_idx <- which(events$action_id == 9000L)
 
   clearance_events <- events[clearance_idx, ]
-  clearance_events$type_name <- "clearance"
+  if (nrow(clearance_events) > 0)
+    clearance_events$type_name <- "clearance"
 
   clearance_events
 }
@@ -394,7 +419,8 @@ tackles_events
   bad_touch_idx <- which(events$action_id == 10000L)
 
   bad_touch_events <- events[bad_touch_idx, ]
-  bad_touch_events$type_name <- "bad_touch"
+  if (nrow(bad_touch_events) > 0)
+    bad_touch_events$type_name <- "bad_touch"
 
   bad_touch_events
 }

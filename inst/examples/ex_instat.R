@@ -7,7 +7,8 @@ library(lubridate)
 library(magrittr)
 
 ## Leicester vs Man utd
-game_id <- 1485159L
+## game_id <- 1171071L
+
 devtools::load_all()
 playeraction::set_db(database_type = "local", data_provider = "inStat")
 
