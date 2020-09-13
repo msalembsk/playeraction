@@ -106,9 +106,7 @@ Create model training data from Spadl or atomic Spadl
   nb_prev_actions = 3L,
   nr_actions = 10L,
   labels = TRUE,
-  add_predictions = TRUE,
-  scores_learner = .settings$model_scores,
-  concedes_learner = .settings$model_concedes
+  add_predictions = TRUE
 )}\if{html}{\out{</div>}}
 }
 

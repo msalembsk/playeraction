@@ -6,14 +6,13 @@ library(tibble)
 library(lubridate)
 library(magrittr)
 
+## Leicester vs Man utd
+game_id <- 1485159L
 devtools::load_all()
 playeraction::set_db(database_type = "local", data_provider = "inStat")
-inStat_events <- playeraction::.instat_events_from_game(1171033)
 
-## game_id <- 44108
-## events <- playeraction::.opta_events_from_game(game_id)
-## spadl_events <- playeraction::convert_events_to_spadl.opta_events(events)
+spadl_instat <- SpadlInStat$new(game_id, spadl_type = "standard")
+flog.info(paste("Spadl representation created !"))
 
-## featured_events <- playeraction::.spadl_to_features(spadl_events)
-
-## labels_events <- playeraction::.spadl_to_labels(spadl_events)
+spadl_instat$get_model_data(add_predictions = FALSE)
+flog.info(paste("training data created !"))

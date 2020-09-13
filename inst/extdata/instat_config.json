@@ -1,73 +1,42 @@
 {
-  "action_types" :[
-  "Pass" ,
-  "Challenges" ,
-  "Free ball pick up",
-  "Possession",
-  "Interception",
-  "Ball out of the field",
-  "Shot",
-  "Goalkeeper's action",
-  "Cross",
-  "Bad ball control",
-  "Grave mistake",
-  "Clearance" ,
-  "Goal",
-  "Discipline"
-  ],
-  "action_pass" :["Non attacking pass", "Attacking pass", "Key pass",
-  "Extra attacking pass", "Key assist"],
-  "action_discipline" : ["Foul" ],
-  "action_clearance" : ["Clearance"],
-  "action_goal" : ["Goal"] ,
-  "action_owngoal" : ["Owngoal"],
-  "action_shot" : ["Shot blocked", "Wide shot", "Shot into the bar/post","Shot on target"],
-  "action_interception" : ["Pass interceptions", "Shots blocked", "Cross interception"],
-  "action_challenges" : ["Air challenge","Dribble","Challenge","Tackle" ],
-  "action_bad_control" : ["Bad ball control"],
-  "action_cross" : ["Cross","Cross blocked"],
-  "action_gk" : ["GK challenge", "Save", "Free ball pick up"],
-  "throw_in" : ["Throw-in"],
-  "freekick" :["Direct free kick","Indirect free kick"],
-  "corner" : ["Corner"],
-  "gk_interception" : ["GK challenge"],
-  "keeper_save" : ["Save"],
-  "keper_pick_up" : ["Free ball pick up"],
-  "shot_freekick" : ["Direct free kick"],
-  "foul": ["Foul"],
-  "take_on": ["Air challenge", "Challenge"],
-  "dribble": ["Dribble"],
-  "tackle": ["Tackle"],
-  "cross": ["Cross","Cross blocked"],
-  "bodypart_types" : [
+"spdal_instat_columns" : [
+"id",
+"half",
+"type_name",
+"result_name",
+"time_in_seconds",
+"side",
+"team_id",
+"player_id",
+"pos_x",
+"pos_y",
+"pos_dest_x",
+"pos_dest_y",
+"body_id"
+],
+"bodypart_types" : [
   {
-    "bodypart_id": 2 ,
+    "bodypart_id": 1 ,
     "bodypart_name": "head",
     "body_id" : 3
 
   },
    {
-    "bodypart_id": 3 ,
-    "bodypart_name": "other",
-    "body_id" : 5
-
-  },
-   {
-    "bodypart_id": 1 ,
+    "bodypart_id": 0 ,
     "bodypart_name": "foot",
     "body_id" : 2
 
   },
    {
-    "bodypart_id": 1 ,
+    "bodypart_id": 0 ,
     "bodypart_name": "foot",
     "body_id" : 1
 
   },
    {
-    "bodypart_id": 3 ,
+    "bodypart_id": 2 ,
     "bodypart_name": "other",
-    "body_id" : 4
+    "body_id" : 5
 
   }
 ]

@@ -93,7 +93,7 @@ Spadl = R6::R6Class("Spadl",
                           }
 
                           ## training data
-                          dt <- pblapply(all_game_ids, .wh) %>% rbindlist()
+                          dt <- lapply(all_game_ids, .wh) %>% rbindlist()
                           dt <- dt[, lapply(.SD, as.numeric)]
                           dt[["scores"]] <- factor(ifelse(dt[["scores"]],
                                                           "goal", "no_goal"),
@@ -132,6 +132,7 @@ Spadl = R6::R6Class("Spadl",
                               dt <- dplyr::mutate(dt,
                                                   scores = scores_pb[["prob.goal"]],
                                                   concedes = concedes_pb[["prob.goal"]])
+
                               spadl_dt <- dplyr::mutate(spadl_dt,
                                                         scores = scores_pb[["prob.goal"]],
                                                         concedes = concedes_pb[["prob.goal"]]
@@ -179,13 +180,24 @@ SpadlOpta = R6::R6Class("SpadlOpta",
 SpadlInStat = R6::R6Class("SpadlInStat",
                           inherit = Spadl,
                           public = list(
-                              initialize = function(game_ids, fixture_con, events_con) {
-                              ## implement a method to fill in the data fields
-                              ## do it in another file
-                              self$data <- .instat_to_spadl(game_ids, events_con)
+                              initialize = function(game_ids,
+                                                    fixture_con = .settings$fixtures_con,
+                                                    events_con = .settings$gameEvents_con,
+                                                    instat_cfg = .settings$instat_config,
+                                                    spadl_cfg = .settings$spadl_config,
+                                                    spadl_type = c("standard", "atomic")) {
 
                               ## call mother class initialize() to finish the job
                               super$initialize(game_ids, fixture_con)
+
+
+                              self$spadl_type <- match.arg(spadl_type)
+                              ## implement a method to fill in the data fields
+                              ## do it in another file
+                              self$data <- .instat_to_spadl(game_ids, events_con,
+                                                            instat_cfg, spadl_cfg, self$spadl_type)
+
+
                             }
                           )
 )

@@ -16,8 +16,10 @@ set_db(
   spadl_config = "spadl_config.json",
   opta_config = "opta_config.json",
   instat_config = "instat_config.json",
-  scores_model_path = "model_scores.RDS",
-  concedes_model_path = "model_concedes.RDS",
+  scores_spadl_model_path = "model_spadl_scores.RDS",
+  concedes_spadl_model_path = "model_spadl_concedes.RDS",
+  scores_atomic_model_path = "model_atomic_scores.RDS",
+  concedes_atomic_model_path = "model_atomic_concedes.RDS",
   project_name = "playeraction"
 )
 }

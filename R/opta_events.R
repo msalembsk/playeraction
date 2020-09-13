@@ -116,7 +116,7 @@
                side = ifelse(team_id_ == home_team_id_, "home", "away"),
                home_team_id = home_team_id_,
                qualifiers = to_l1(qualifiers_)
-               )
+        )
     }
 
     ## get all events from a given game_id
