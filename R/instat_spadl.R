@@ -6,9 +6,9 @@
   spadl_type <- match.arg(spadl_type)
   ## work horse
   .wh <- function(game_id) {
-     out <- .convert_instat_events_spadl(game_id, events_con = events_con,
-                  instat_cfg = instat_cfg,
-                  spadl_cfg = spadl_cfg)
+    out <- .convert_instat_events_spadl(game_id, events_con = events_con,
+                                        instat_cfg = instat_cfg,
+                                        spadl_cfg = spadl_cfg)
     ## extract some useful info
     home_team_ <- out$home_team_id[1]
     if (spadl_type == "atomic") {
@@ -82,30 +82,33 @@
 }
 
 .fix_end_action_position <- function(events) {
-same_start_pos <- c("tackle", "interception", "bad_touch",
-                         "take_on", "keeper_pick_up", "keeper_save")
+  same_start_pos <- c("tackle", "interception", "bad_touch",
+                      "take_on", "keeper_pick_up", "keeper_save")
 
-next_start_pos <- c("dribble", "clearance", "freekick_short")
+  next_start_pos <- c("dribble", "clearance", "freekick_short", "throw_in",
+                      "corner_short")
 
-is_same_start_pos_idx <- which(events$type_name %in% same_start_pos )
-events$end_x[is_same_start_pos_idx] <- events$start_x[is_same_start_pos_idx]
-events$end_y[is_same_start_pos_idx] <- events$start_y[is_same_start_pos_idx]
+  is_same_start_pos_idx <- which(events$type_name %in% same_start_pos &
+                                   is.na(events$end_x) & is.na(events$end_y))
+  events$end_x[is_same_start_pos_idx] <- events$start_x[is_same_start_pos_idx]
+  events$end_y[is_same_start_pos_idx] <- events$start_y[is_same_start_pos_idx]
 
-## event type that need next event position
-is_next_start_pos_idx <- which(events$type_name %in% next_start_pos)
-events$end_x[is_next_start_pos_idx] <- events$start_x[is_next_start_pos_idx + 1]
-events$end_y[is_next_start_pos_idx] <- events$start_y[is_next_start_pos_idx + 1]
+  ## event type that need next event position
+  is_next_start_pos_idx <- which(events$type_name %in% next_start_pos &
+                                   is.na(events$end_x) & is.na(events$end_y))
+  events$end_x[is_next_start_pos_idx] <- events$start_x[is_next_start_pos_idx + 1]
+  events$end_y[is_next_start_pos_idx] <- events$start_y[is_next_start_pos_idx + 1]
 
 
-## last event if end_x or end_y is NA
-nrows <- nrow(events)
+  ## last event if end_x or end_y is NA
+  nrows <- nrow(events)
 
-if (is.na(events$end_x[nrows]) & is.na(events$end_y[nrows])) {
-  events$end_x[nrows] <-  events$start_x[nrows]
-  events$end_y[nrows] <-  events$start_y[nrows]
-}
+  if (is.na(events$end_x[nrows]) & is.na(events$end_y[nrows])) {
+    events$end_x[nrows] <-  events$start_x[nrows]
+    events$end_y[nrows] <-  events$start_y[nrows]
+  }
 
-events
+  events
 }
 
 .playing_side <- function(events, home_team_id) {
@@ -117,8 +120,8 @@ events
 
 .get_time_in_seconds <- function(events) {
   time_in_seconds <- ifelse(events$half == 2,
-                       events$second  + 2700,
-                       events$second)
+                            events$second  + 2700,
+                            events$second)
 
   time_in_seconds
 }
@@ -194,30 +197,30 @@ events
 }
 
 .get_shots <- function(events) {
-    ##  direct freekick ID == 4
-    is_freekick <- events$standart_id == 4L
-    ## corner ID == 5
-    is_corner <- events$standart_id == 5L
-    is_shot <- events$generic_action_type_id == 4L
+  ##  direct freekick ID == 4
+  is_freekick <- events$standart_id == 4L
+  ## corner ID == 5
+  is_corner <- events$standart_id == 5L
+  is_shot <- events$generic_action_type_id == 4L
 
-    is_goal <- events$action_id == 8010L
+  is_goal <- events$action_id == 8010L
 
-    is_penalty <- events$standart_id == 6L
+  is_penalty <- events$standart_id == 6L
 
-    shots_idx <- which(!is_freekick & !is_corner & !is_penalty &
+  shots_idx <- which(!is_freekick & !is_corner & !is_penalty &
                        (is_shot | is_goal))
-    shot_events <- events[shots_idx, ]
+  shot_events <- events[shots_idx, ]
 
-    shot_events$type_name <- "shot"
-    penalty_shots_idx <- which(is_penalty & (is_shot | is_goal))
-    if (length(penalty_shots_idx) > 0) {
-        penalty_shots <- events[penalty_shots_idx, ]
-        penalty_shots$type_name <- "shot_penalty"
+  shot_events$type_name <- "shot"
+  penalty_shots_idx <- which(is_penalty & (is_shot | is_goal))
+  if (length(penalty_shots_idx) > 0) {
+    penalty_shots <- events[penalty_shots_idx, ]
+    penalty_shots$type_name <- "shot_penalty"
 
-        shot_events <- rbind(shot_events, penalty_shots)
-    }
+    shot_events <- rbind(shot_events, penalty_shots)
+  }
 
-    shot_events
+  shot_events
 }
 
 .get_freekick <- function(events) {
@@ -280,14 +283,14 @@ events
 
 .get_tackles <- function(events) {
 
-## unsuccessfull_dribbling action ID : 2052
-## successfull tackle action ID : 2031
-tackle_idx <- which(events$action_id %in% c(2052L, 2031L))
-tackles_events <- events[tackle_idx, ]
-if (nrow(tackles_events) > 0)
-  tackles_events$type_name <- "tackle"
+  ## unsuccessfull_dribbling action ID : 2052
+  ## successfull tackle action ID : 2031
+  tackle_idx <- which(events$action_id %in% c(2052L, 2031L))
+  tackles_events <- events[tackle_idx, ]
+  if (nrow(tackles_events) > 0)
+    tackles_events$type_name <- "tackle"
 
-tackles_events
+  tackles_events
 }
 
 .get_crosses <- function(events) {
@@ -445,14 +448,14 @@ tackles_events
   yellow_card_idx <- which(same_player & is_yellow_card)
 
   if (.check_exist(yellow_card_idx))
-  actions_[yellow_card_idx, ]$result_name <- "yellow_card"
+    actions_[yellow_card_idx, ]$result_name <- "yellow_card"
 
   ## Red Card action ID (next event)
   is_red_card <- next_actions_$action_id == 3030L
   red_card_idx <- which(same_player & is_red_card)
 
   if (.check_exist(red_card_idx))
-  actions_[red_card_idx, ]$result_name <- "red_card"
+    actions_[red_card_idx, ]$result_name <- "red_card"
 
   ## offside can be after opening of a pass
   ## not sure about the next action
@@ -461,26 +464,26 @@ tackles_events
   offside_idx <- which(is_offside)
 
   if (.check_exist(offside_idx))
-  actions_[offside_idx, ]$result_name <- "offside"
+    actions_[offside_idx, ]$result_name <- "offside"
 
   goal_idx <- which(events$action_id == 8010L)
 
   if (.check_exist(goal_idx))
-  actions_[goal_idx, ]$result_name <- "success"
+    actions_[goal_idx, ]$result_name <- "success"
 
 
 
   owngoal_idx <- which(events$action_id == 8020L)
 
   if (.check_exist(owngoal_idx))
-  actions_[owngoal_idx, ]$result_name <- "owngoal"
+    actions_[owngoal_idx, ]$result_name <- "owngoal"
 
   is_success <-  !(actions_$type_name %in% c("shot", "foul", "offside")) &
     actions_$outcome
   success_idx <- which(is_success)
 
   if (.check_exist(success_idx))
-  actions_[success_idx, ]$result_name <- "success"
+    actions_[success_idx, ]$result_name <- "success"
 
   actions_
 }
