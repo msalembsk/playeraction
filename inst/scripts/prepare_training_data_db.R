@@ -70,4 +70,4 @@ mss_game_ids <- game_ids[!game_ids %in% in_game_ids]
     spadl_atomic_features_con$insert(spadl_inStat_atomic_training_dt)
 }
 
-x <- map(mss_game_ids, safely(.wh))
+##x <- map(mss_game_ids, safely(.wh))
